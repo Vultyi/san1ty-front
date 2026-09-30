@@ -3,6 +3,7 @@ import 'package:estrutura_front_san1ty/theme/support_theme.dart';
 import 'package:estrutura_front_san1ty/theme/support_colors.dart';
 import 'package:estrutura_front_san1ty/widgets/support_button.dart';
 import 'package:estrutura_front_san1ty/widgets/support_components.dart';
+import 'package:estrutura_front_san1ty/services/admin_service.dart';
 
 class SupportLoginScreen extends StatefulWidget {
   static const String routeName = '/support-login';
@@ -16,6 +17,7 @@ class SupportLoginScreen extends StatefulWidget {
 class _SupportLoginScreenState extends State<SupportLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _adminService = AdminService();
   bool _obscurePassword = true;
   bool _loading = false;
 
@@ -40,12 +42,23 @@ class _SupportLoginScreenState extends State<SupportLoginScreen> {
   void _handleLogin() {
     setState(() => _loading = true);
 
-    // Simular delay de autenticação
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        setState(() => _loading = false);
-        // Navegar para dashboard de suporte
+    // Login real contra o backend + gate de role (support/admin).
+    _adminService
+        .loginSupport(
+      _emailController.text.trim(),
+      _passwordController.text,
+    )
+        .then((result) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      if (result['success'] == true) {
         Navigator.pushReplacementNamed(context, '/support-dashboard');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['error']?.toString() ?? 'Falha no login.'),
+          ),
+        );
       }
     });
   }

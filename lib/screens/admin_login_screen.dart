@@ -5,6 +5,7 @@ import '../theme/admin_theme.dart';
 import '../widgets/admin_button.dart';
 import '../widgets/admin_input.dart';
 import '../widgets/admin_card.dart';
+import '../services/admin_service.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
@@ -17,6 +18,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _adminService = AdminService();
   bool _isLoading = false;
 
   @override
@@ -31,14 +33,23 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Implement actual login API call
-    await Future.delayed(const Duration(seconds: 2)); // Mock delay
+    // Login real contra o backend + gate de role (admin/compliance/support).
+    final result = await _adminService.loginAdmin(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    // Navigate to dashboard on success
-    if (mounted) {
+    if (result['success'] == true) {
       Navigator.pushReplacementNamed(context, '/admin/dashboard');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['error']?.toString() ?? 'Falha no login.'),
+        ),
+      );
     }
   }
 

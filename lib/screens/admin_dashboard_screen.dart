@@ -13,6 +13,8 @@ import '../widgets/admin_input.dart';
 import '../models/admin_models.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
+  static const String routeName = '/admin/dashboard';
+
   const AdminDashboardScreen({super.key});
 
   @override
@@ -94,10 +96,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Navigator.pushNamed(context, '/admin/team');
         break;
       case 2:
-        Navigator.pushNamed(context, '/admin/chats');
+        // TODO: Implement admin chats screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chats de Admin — Em integração'),
+            duration: Duration(seconds: 2),
+          ),
+        );
         break;
       case 3:
-        Navigator.pushNamed(context, '/admin/settings');
+        // TODO: Implement admin settings screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Configurações — Em integração'),
+            duration: Duration(seconds: 2),
+          ),
+        );
         break;
     }
   }
@@ -190,9 +204,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       child: AdminMemberCard(
                         member: member,
                         onTap: () {
+                          // Navigate to team screen with member ID as argument
                           Navigator.pushNamed(
                             context,
-                            '/admin/team/${member.id}',
+                            '/admin/team',
+                            arguments: {'memberId': member.id},
                           );
                         },
                       ),

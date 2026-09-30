@@ -1,16 +1,37 @@
-# estrutura_front_san1ty
+# San1ty Front — San1ty Pay (Flutter)
 
-A new Flutter project.
+App Flutter do San1ty Pay: carteira, PIX, commerce, suporte e admin.
 
-## Getting Started
+## Requisitos
+- Flutter stable (SDK ^3.10.0)
+- Java 17 para build Android
 
-This project is a starting point for a Flutter application.
+## Rodar em dev
+```bash
+flutter pub get
+flutter run --dart-define=API_BASE_URL=https://api.san1typay.com
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Build APK
+```bash
+# debug local
+./build_apk.sh debug https://api.san1typay.com
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# release (assinatura release configurada via android/key.properties no CI)
+flutter build apk --release --dart-define=API_BASE_URL=https://api.san1typay.com --build-number=<N>
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Artefato: `build/app/outputs/flutter-apk/app-release.apk`
+
+## Estrutura
+- `lib/` — app (screens, services, core/security, theme, widgets)
+- `android/` — host Android (`applicationId: com.san1ty.estrutura_front_san1ty`)
+- `ios/`, `web/` — hosts secundários
+
+## Segurança / assinatura
+- Nunca commitar `*.jks`, `*.keystore`, `android/key.properties` ou `.env`.
+- Release no CI usa secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`.
+- `android/.gitignore` já ignora `key.properties` e keystores.
+
+## Backend
+Base URL via `--dart-define=API_BASE_URL` (default `https://api.san1typay.com` em `lib/core/security/api_security_service.dart`).

@@ -4,6 +4,7 @@ import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/constants/text_styles.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:estrutura_front_san1ty/services/payment_service.dart';
 
 class CommerceDashboardScreen extends StatefulWidget {
   static const String routeName = '/commerce/dashboard';
@@ -24,6 +25,14 @@ class _CommerceDashboardScreenState extends State<CommerceDashboardScreen>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   bool _hasNewSuggestions = true;
+  bool _isLoading = false;
+
+  final PaymentService _paymentService = PaymentService();
+
+  // Dados do dashboard
+  Map<String, dynamic> _dashboardData = {};
+  List<Map<String, dynamic>> _recentTransactions = [];
+  Map<String, dynamic> _statementData = {};
 
   static const List<String> _pageTitles = [
     'Painel Comercial',
@@ -44,6 +53,9 @@ class _CommerceDashboardScreenState extends State<CommerceDashboardScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
     _animationController.forward();
+
+    // Carregar dados do dashboard
+    _loadDashboardData();
   }
 
   @override
@@ -51,6 +63,57 @@ class _CommerceDashboardScreenState extends State<CommerceDashboardScreen>
     _animationController.dispose();
     _amountController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDashboardData() async {
+    if (!mounted) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Carregar histórico de transações
+      final historyResponse = await _paymentService.getTransactionHistory(limit: 5);
+      if (historyResponse['success'] == true) {
+        setState(() {
+          _recentTransactions = List<Map<String, dynamic>>.from(
+            historyResponse['transactions'] ?? []
+          );
+        });
+      }
+
+      // Carregar dados do extrato
+      final statementResponse = await _paymentService.getStatement();
+      if (statementResponse['success'] == true) {
+        setState(() {
+          _statementData = statementResponse;
+        });
+      }
+
+      // Dados mockados para dashboard (até implementar endpoint específico)
+      setState(() {
+        _dashboardData = {
+          'total_sales': _statementData['total_amount'] ?? 1250.50,
+          'total_transactions': _recentTransactions.length,
+          'pending_payments': 3,
+          'monthly_growth': 15.5,
+        };
+      });
+
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao carregar dados do dashboard'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override

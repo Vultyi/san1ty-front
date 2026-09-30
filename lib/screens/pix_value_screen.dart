@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/screens/pix_success_screen.dart';
+import 'package:estrutura_front_san1ty/services/payment_service.dart';
 
 class PixValueScreen extends StatefulWidget {
   static const String routeName = '/pix/value';
@@ -29,7 +30,10 @@ class _PixValueScreenState extends State<PixValueScreen> {
     return 'R\$ ${reaisString.isEmpty ? '0' : reaisString},${centavos.toString().padLeft(2, '0')}';
   }
 
-  bool get _canConfirm => _amountCents > 0;
+  bool get _canConfirm => _amountCents > 0 && !_isCreatingPayment;
+
+  final PaymentService _paymentService = PaymentService();
+  bool _isCreatingPayment = false;
 
   void _addDigit(String digit) {
     if (_amountDigits.length >= 9) return;
@@ -88,7 +92,16 @@ class _PixValueScreenState extends State<PixValueScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         shadowColor: const Color(0x4D1D4ED8),
                       ),
-                      child: Text('Confirmar Pagamento $_formattedAmount', style: const TextStyle(fontSize: 16)),
+                      child: _isCreatingPayment
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text('Confirmar Pagamento $_formattedAmount', style: const TextStyle(fontSize: 16)),
                     ),
                     const SizedBox(height: Dimensions.space24),
                   ],
@@ -208,16 +221,48 @@ class _PixValueScreenState extends State<PixValueScreen> {
     );
   }
 
-  void _confirm() {
+  Future<void> _confirm() async {
     if (!_canConfirm) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PixSuccessScreen(
-          amount: _formattedAmount,
-          recipientKey: widget.recipientKey,
-          timestamp: DateTime.now(),
+
+    setState(() {
+      _isCreatingPayment = true;
+    });
+
+    final response = await _paymentService.processPixPayment(
+      pixKey: widget.recipientKey,
+      amount: _amountCents / 100.0,
+      description: 'Pagamento via San1ty',
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isCreatingPayment = false;
+    });
+
+    if (response['success'] == true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PixSuccessScreen(
+            amount: _formattedAmount,
+            recipientKey: widget.recipientKey,
+            timestamp: DateTime.now(),
+            pixKey: response['pix_key'] as String? ?? widget.recipientKey,
+            qrCodeText: response['qr_code_text'] as String? ?? '',
+            ticketUrl: response['ticket_url'] as String?,
+            paymentId: response['payment_id'] as String? ?? '',
+          ),
         ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(response['error'] ?? 'Erro ao processar pagamento PIX.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
       ),
     );
   }

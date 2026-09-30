@@ -7,7 +7,7 @@ class AppTextStyles {
   static const TextStyle logoStyle = TextStyle(
     fontSize: 30,
     fontWeight: FontWeight.w700,
-    color: AppColors.brandPrimary,
+    color: Colors.black,
     letterSpacing: 1.5,
     height: 1.2,
   );

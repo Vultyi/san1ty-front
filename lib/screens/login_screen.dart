@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
+import 'package:estrutura_front_san1ty/services/auth_service.dart';
+import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = '/login';
@@ -16,7 +18,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+  final _authService = AuthService();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -50,27 +54,107 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _onLoginPressed() {
+  void _onLoginPressed() async {
+    if (!mounted) return;
+
     FocusScope.of(context).unfocus();
-    Navigator.pushReplacementNamed(context, '/splash');
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        // Login bem-sucedido - navegar para commerce intro
+        Navigator.pushReplacementNamed(context, CommerceIntroScreen.routeName);
+      } else {
+        // Mostrar erro
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['error'] ?? 'Erro no login'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro de conexão. Tente novamente.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  void _onCreateAccountPressed() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Criação de conta ainda não implementada.'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  void _onCreateAccountPressed() async {
+    Navigator.pushNamed(context, '/signup');
   }
 
-  void _onForgotPasswordPressed() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Recuperação de senha ainda não implementada.'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  void _onForgotPasswordPressed() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Digite seu email primeiro.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _authService.requestPasswordReset(email);
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email de recuperação enviado!'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['error'] ?? 'Erro ao enviar email.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro de conexão. Tente novamente.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -273,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return SizedBox(
       height: 48,
       child: ElevatedButton(
-        onPressed: _canSubmit ? _onLoginPressed : null,
+        onPressed: (_canSubmit && !_isLoading) ? _onLoginPressed : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.blueDark,
           disabledBackgroundColor: AppColors.blueDark.withAlpha((0.5 * 255).round()),
@@ -283,7 +367,16 @@ class _LoginScreenState extends State<LoginScreen> {
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
-        child: const Text('Entrar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5)),
+        child: _isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Text('Entrar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5)),
       ),
     );
   }

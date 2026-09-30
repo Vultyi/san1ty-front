@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/constants/text_styles.dart';
-import 'package:estrutura_front_san1ty/screens/dashboard_screen.dart';
+import 'package:estrutura_front_san1ty/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   static const String routeName = '/splash';
@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _goToDashboard() {
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
+    Navigator.pushReplacementNamed(context, LoginScreen.routeName);
   }
 
   @override
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const Spacer(),
               const Icon(Icons.shield_outlined, size: 72, color: AppColors.blueLight),
               const SizedBox(height: Dimensions.space24),
-              Text('San1tyPay', style: AppTextStyles.logoStyle.copyWith(fontSize: 34)),
+              Text('San1ty Pay', style: AppTextStyles.logoStyle.copyWith(fontSize: 34)),
               const SizedBox(height: Dimensions.space12),
               Text(
                 'Bem-vindo ao seu painel financeiro digital',

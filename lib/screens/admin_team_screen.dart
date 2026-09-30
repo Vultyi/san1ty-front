@@ -125,10 +125,16 @@ class _AdminTeamScreenState extends State<AdminTeamScreen> {
         // Already on team
         break;
       case 2:
-        Navigator.pushNamed(context, '/admin/chats');
+        // Admin chats - not yet implemented
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chats do admin em breve!')),
+        );
         break;
       case 3:
-        Navigator.pushNamed(context, '/admin/settings');
+        // Admin settings - not yet implemented
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Configurações do admin em breve!')),
+        );
         break;
     }
   }

@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Obrigatório: sem isso o APK release não faz nenhuma requisição
+         (era uma das causas do "travado no login"). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
     <application
-        android:label="estrutura_front_san1ty"
+        android:label="San1tyPay"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

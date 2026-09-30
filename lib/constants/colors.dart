@@ -1,3 +1,9 @@
+// lib/constants/colors.dart
+
+/// Central color palette for the San1ty Pay application.
+///
+/// All colors used across the app should reference this class to ensure
+/// visual consistency and simplify future theme changes.
 import 'package:flutter/material.dart';
 
 class AppColors {
@@ -31,7 +37,7 @@ class AppColors {
   static const Color errorRed = Color(0xFFEF5350);
   static const Color pixGreen = Color(0xFF32BCAD);
 
-  static const Color borderDefault = Color(0xFF1C1C1E);
+  static const Color borderDefault = Color(0xFF2C2C2E);
   static const Color borderHover = Color(0xFF007AFF);
   static const Color borderActive = Color(0xFF2962FF);
 

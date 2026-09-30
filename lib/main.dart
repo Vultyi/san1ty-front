@@ -25,6 +25,7 @@ import 'package:estrutura_front_san1ty/screens/support_history_screen.dart';
 import 'package:estrutura_front_san1ty/screens/admin_login_screen.dart';
 import 'package:estrutura_front_san1ty/screens/admin_dashboard_screen.dart';
 import 'package:estrutura_front_san1ty/screens/admin_team_screen.dart';
+import 'package:estrutura_front_san1ty/screens/signup_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,7 +56,19 @@ class MyApp extends StatelessWidget {
       final amount = args?['amount'] as String? ?? '0';
       final recipientKey = args?['recipientKey'] as String? ?? '';
       final timestamp = args?['timestamp'] as DateTime? ?? DateTime.now();
-      return PixSuccessScreen(amount: amount, recipientKey: recipientKey, timestamp: timestamp);
+      final pixKey = args?['pixKey'] as String? ?? recipientKey;
+      final qrCodeText = args?['qrCodeText'] as String? ?? '';
+      final ticketUrl = args?['ticketUrl'] as String?;
+      final paymentId = args?['paymentId'] as String? ?? '';
+      return PixSuccessScreen(
+        amount: amount,
+        recipientKey: recipientKey,
+        timestamp: timestamp,
+        pixKey: pixKey,
+        qrCodeText: qrCodeText,
+        ticketUrl: ticketUrl,
+        paymentId: paymentId,
+      );
     },
     PixRegisterKeyScreen.routeName: (context) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
@@ -66,6 +79,7 @@ class MyApp extends StatelessWidget {
     PixConfirmPhoneScreen.routeName: (_) => const PixConfirmPhoneScreen(),
     SplashScreen.routeName: (_) => const SplashScreen(),
     LoginScreen.routeName: (_) => const LoginScreen(),
+    SignupScreen.routeName: (_) => const SignupScreen(),
     // Support Routes
     SupportLoginScreen.routeName: (_) => const SupportLoginScreen(),
     SupportDashboardScreen.routeName: (_) => const SupportDashboardScreen(),
@@ -74,16 +88,16 @@ class MyApp extends StatelessWidget {
     SupportHistoryScreen.routeName: (_) => const SupportHistoryScreen(),
     // Admin Routes
     '/admin/login': (_) => const AdminLoginScreen(),
-    '/admin/dashboard': (_) => const AdminDashboardScreen(),
+    AdminDashboardScreen.routeName: (_) => const AdminDashboardScreen(),
     '/admin/team': (_) => const AdminTeamScreen(),
-    '/admin/chats': (_) => const Placeholder(), // TODO: Implement admin chats screen
-    '/admin/settings': (_) => const Placeholder(), // TODO: Implement admin settings screen
+    // '/admin/chats' and '/admin/settings' removed — not yet implemented.
+    // Dashboard shows SnackBar informing the user these are in integration.
   };
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'San1ty',
+      title: 'San1ty Pay',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF000000),
@@ -100,7 +114,7 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
       routes: routes,
     );
   }

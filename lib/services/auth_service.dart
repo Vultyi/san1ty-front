@@ -1,0 +1,138 @@
+// lib/services/auth_service.dart
+
+import 'dart:convert';
+import 'package:estrutura_front_san1ty/core/security/api_security_service.dart';
+import 'package:estrutura_front_san1ty/core/security/secure_storage_service.dart';
+
+/// Handles authentication operations for the San1ty Pay application.
+///
+/// All network calls are delegated to [ApiSecurityService], which enforces
+/// secure headers, timeouts and automatic session cleanup on 401 responses.
+/// Tokens are persisted locally via [SecureStorageService].
+class AuthService {
+  final ApiSecurityService _apiService = ApiSecurityService();
+  final SecureStorageService _storageService = SecureStorageService();
+
+  /// Authenticates the user and stores the received tokens locally.
+  ///
+  /// Backend retorna flat `{access_token, refresh_token}` (sem envelope);
+  /// o perfil vem de `GET /api/auth/me`. O retorno aqui mantém o formato
+  /// `{success, data:{accessToken, refreshToken, user}}` que as telas usam.
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final response = await _apiService.post('/api/auth/login', body: {
+        'email': email,
+        'password': password,
+      });
+
+      final accessToken = response['access_token'] as String?;
+      if (accessToken == null || accessToken.isEmpty) {
+        return {
+          'success': false,
+          'error': response['error'] ?? 'Erro desconhecido no login.',
+        };
+      }
+      await _storageService.saveAuthToken(accessToken);
+      final refreshToken = response['refresh_token'] as String?;
+      if (refreshToken != null) {
+        await _storageService.saveRefreshToken(refreshToken);
+      }
+      final me = await _apiService.get('/api/auth/me');
+      final user = (me['email'] != null) ? me : <String, dynamic>{};
+      await _storageService.saveUserData(jsonEncode(user));
+      return {
+        'success': true,
+        'data': {
+          'accessToken': accessToken,
+          'refreshToken': refreshToken,
+          'user': user,
+        },
+      };
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'Erro de conexão. Verifique sua internet e tente novamente.',
+      };
+    }
+  }
+
+  /// Clears all locally stored tokens and user data, effectively ending
+  /// the current session on this device.
+  Future<void> logout() async {
+    await _storageService.clearAll();
+  }
+
+  /// Returns true when a non-empty access token is present in local storage.
+  ///
+  /// Does not validate the token against the server — use this only for
+  /// local navigation guards. The server will reject expired tokens regardless.
+  Future<bool> isLoggedIn() async {
+    final token = await _storageService.getAuthToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  /// Returns the authenticated user's profile from local storage, or null
+  /// when no session data is available.
+  Future<Map<String, dynamic>?> getCurrentUser() async {
+    try {
+      final userDataString = await _storageService.getUserData();
+      if (userDataString == null || userDataString.isEmpty) {
+        return null;
+      }
+      return jsonDecode(userDataString) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Registers a new user account.
+  ///
+  /// Backend: `POST /api/auth/signup` `{email, password, full_name}`.
+  /// O `phone` da tela não tem campo no backend — não é enviado.
+  /// Retorna `{success: true}` para o fluxo atual das telas.
+  Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    required String name,
+    String? phone,
+  }) async {
+    try {
+      final response = await _apiService.post('/api/auth/signup', body: {
+        'email': email,
+        'password': password,
+        'full_name': name,
+      });
+      // Backend devolve 201 com o perfil flat (sem envelope success);
+      // _handleResponse só retorna mapa em 2xx — chegou aqui, criou.
+      if (response.containsKey('id') || response.containsKey('email')) {
+        return {'success': true, 'data': response};
+      }
+      return {
+        'success': false,
+        'error': response['error'] ?? 'Erro desconhecido no registro.',
+      };
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'Erro de conexão. Verifique sua internet e tente novamente.',
+      };
+    }
+  }
+
+  /// Requests a password reset email for the given address.
+  ///
+  /// Always returns a success-like response to the UI regardless of
+  /// whether the email exists, preventing email enumeration.
+  Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+    try {
+      return await _apiService.post('/api/auth/forgot-password', body: {
+        'email': email,
+      });
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'Erro de conexão. Verifique sua internet e tente novamente.',
+      };
+    }
+  }
+}

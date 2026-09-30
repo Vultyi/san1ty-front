@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 
@@ -8,8 +9,21 @@ class PixSuccessScreen extends StatelessWidget {
   final String amount;
   final String recipientKey;
   final DateTime timestamp;
+  final String pixKey;
+  final String qrCodeText;
+  final String? ticketUrl;
+  final String paymentId;
 
-  const PixSuccessScreen({super.key, required this.amount, required this.recipientKey, required this.timestamp});
+  const PixSuccessScreen({
+    super.key,
+    required this.amount,
+    required this.recipientKey,
+    required this.timestamp,
+    required this.pixKey,
+    required this.qrCodeText,
+    this.ticketUrl,
+    required this.paymentId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +47,13 @@ class PixSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               _buildDetailsCard(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              _buildCopyButton(context),
+              if (ticketUrl != null && ticketUrl!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _buildOpenTicketButton(context),
+              ],
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
                   Navigator.popUntil(context, (route) => route.isFirst);
@@ -86,9 +106,61 @@ class PixSuccessScreen extends StatelessWidget {
           const Divider(color: Color(0xFF333333), height: 32, thickness: 1),
           _buildDetailRow('Para', recipientKey),
           const Divider(color: Color(0xFF333333), height: 32, thickness: 1),
+          _buildDetailRow('Chave PIX', pixKey),
+          if (qrCodeText.isNotEmpty) ...[
+            const Divider(color: Color(0xFF333333), height: 32, thickness: 1),
+            _buildDetailRow('QR Code Texto', qrCodeText),
+          ],
+          const Divider(color: Color(0xFF333333), height: 32, thickness: 1),
           _buildDetailRow('Data e hora', _formatTimestamp(timestamp)),
+          if (paymentId.isNotEmpty) ...[
+            const Divider(color: Color(0xFF333333), height: 32, thickness: 1),
+            _buildDetailRow('ID do Pagamento', paymentId),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildCopyButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        Clipboard.setData(ClipboardData(text: pixKey));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chave PIX copiada para a área de transferência.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 52),
+        backgroundColor: const Color(0xFF1D4ED8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: const Text('Copiar chave PIX', style: TextStyle(fontSize: 16)),
+    );
+  }
+
+  Widget _buildOpenTicketButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () async {
+        if (ticketUrl == null || ticketUrl!.isEmpty) return;
+        final messenger = ScaffoldMessenger.of(context);
+        await Clipboard.setData(ClipboardData(text: ticketUrl!));
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('URL do comprovante copiada. Abra no navegador.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 52),
+        backgroundColor: const Color(0xFF0F766E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: const Text('Copiar URL do comprovante', style: TextStyle(fontSize: 16)),
     );
   }
 

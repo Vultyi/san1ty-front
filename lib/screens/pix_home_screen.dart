@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/screens/pix_manage_keys_screen.dart';
@@ -23,9 +23,6 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
   String _rawAmount = '';
   bool _qrGenerated = false;
   bool _showFeedback = false;
-  bool _isPulsing = false;
-  List<List<bool>>? _qrMatrix;
-  Timer? _pulseTimer;
   Timer? _feedbackTimer;
 
   static const String _pixCnpj = '12.345.678/0001-99';
@@ -34,7 +31,6 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
   void dispose() {
     _amountController.dispose();
     _valueFocusNode.dispose();
-    _pulseTimer?.cancel();
     _feedbackTimer?.cancel();
     super.dispose();
   }
@@ -68,37 +64,20 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
 
   void _generateQrCode() {
     if (!_canGenerateQr) return;
-    final random = Random();
-    _qrMatrix = List.generate(
-      8,
-      (_) => List.generate(8, (_) => random.nextBool()),
-    );
-    _qrGenerated = true;
-    _showFeedback = true;
-    _isPulsing = true;
-    _pulseTimer?.cancel();
     _feedbackTimer?.cancel();
-
-    _pulseTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _isPulsing = !_isPulsing);
+    setState(() {
+      _qrGenerated = true;
+      _showFeedback = true;
     });
-
     _feedbackTimer = Timer(const Duration(seconds: 3), () {
-      _pulseTimer?.cancel();
-      setState(() {
-        _showFeedback = false;
-        _isPulsing = false;
-      });
+      if (mounted) setState(() => _showFeedback = false);
     });
-
-    setState(() {});
   }
 
   Future<void> _copyPix() async {
     await Clipboard.setData(const ClipboardData(text: _pixCnpj));
     setState(() {
       _showFeedback = false;
-      _isPulsing = false;
     });
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -287,9 +266,9 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
           AnimatedOpacity(
             opacity: _showFeedback ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 300),
-            child: Opacity(
-              opacity: _isPulsing ? 1.0 : 0.5,
-              child: const Text('QR Code gerado com sucesso!', style: TextStyle(color: Color(0xFF60A5FA), fontSize: 14)),
+            child: const Text(
+              'QR Code gerado com sucesso!',
+              style: TextStyle(color: Color(0xFF60A5FA), fontSize: 14),
             ),
           ),
           const SizedBox(height: Dimensions.space16),
@@ -306,33 +285,21 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
   Widget _buildQrContainer() {
     return Center(
       child: Container(
-        width: 160,
-        height: 160,
+        width: 180,
+        height: 180,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: _qrGenerated && _qrMatrix != null
+        child: _qrGenerated
             ? Padding(
                 padding: const EdgeInsets.all(8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _qrMatrix!.map((row) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: row.map((active) {
-                        return Container(
-                          width: 12,
-                          height: 12,
-                          margin: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: active ? Colors.black : Colors.white,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  }).toList(),
+                child: QrImageView(
+                  data: 'PIX:$_pixCnpj:$_rawAmount',
+                  version: QrVersions.auto,
+                  size: 164,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
                 ),
               )
             : const Center(

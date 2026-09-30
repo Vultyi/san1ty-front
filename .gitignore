@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Signing / secrets - nunca commitar
+*.jks
+*.keystore
+android/key.properties
+.env
+.env.local
+
+# Logs locais de build
+build_log.txt
+build_apk.log

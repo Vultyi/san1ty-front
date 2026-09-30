@@ -5,7 +5,13 @@ import 'secure_storage_service.dart';
 
 /// Serviço de API com segurança implementada
 class ApiSecurityService {
-  static const String baseUrl = 'https://api.san1typay.com/v1';
+  /// Base da API. Override no build:
+  /// `flutter build apk --dart-define=API_BASE_URL=https://sua-api.com`
+  /// Default sem `/v1` (o nginx também remove `/v1` por compatibilidade).
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://api.san1typay.com',
+  );
   static const Duration requestTimeout = Duration(seconds: 30);
   
   final SecureStorageService _secureStorage = SecureStorageService();
@@ -14,15 +20,21 @@ class ApiSecurityService {
   /// Headers padrão seguros para requisições
   Future<Map<String, String>> _getSecureHeaders() async {
     final token = await _secureStorage.getAuthToken();
-    
+    final paymentSession = await _secureStorage.getPaymentSession();
+    final deviceId = await _secureStorage.getOrCreateDeviceId();
+
     return {
       'Content-Type': 'application/json; charset=utf-8',
       'Accept': 'application/json',
       'X-API-Version': '1.0',
       'X-Client-Platform': 'flutter-mobile',
       'X-Request-ID': _generateRequestId(),
+      'X-Device-Id': deviceId,
       if (token != null && token.isNotEmpty)
         'Authorization': 'Bearer $token',
+      // Credencial de leitura do polling (backend exige nas leituras).
+      if (paymentSession != null && paymentSession.isNotEmpty)
+        'X-Session-Id': paymentSession,
     };
   }
 
