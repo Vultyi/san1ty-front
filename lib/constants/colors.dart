@@ -9,35 +9,35 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color backgroundPrimary = Color(0xFF000000);
-  static const Color backgroundSecondary = Color(0xFF1C1C1E);
-  static const Color backgroundTertiary = Color(0xFF2C2C2E);
+  static const Color backgroundPrimary = Color(0xFF07090D);
+  static const Color backgroundSecondary = Color(0xFF0D121A);
+  static const Color backgroundTertiary = Color(0xFF131A26);
 
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB0B0B0);
-  static const Color textTertiary = Color(0xFF666666);
-  static const Color textLabel = Color(0xFFB0B0B0);
-  static const Color textPlaceholder = Color(0xFF666666);
+  static const Color textPrimary = Color(0xFFF5F7FA);
+  static const Color textSecondary = Color(0xFF8B98AA);
+  static const Color textTertiary = Color(0xFF5B6774);
+  static const Color textLabel = Color(0xFF8B98AA);
+  static const Color textPlaceholder = Color(0xFF5B6774);
 
-  static const Color borderNormal = Color(0xFF333333);
+  static const Color borderNormal = Color(0xFF1C2A3D);
 
-  static const Color bluePrimary = Color(0xFF2563EB);
-  static const Color blueDark = Color(0xFF1D4ED8);
+  static const Color bluePrimary = Color(0xFF2F80ED);
+  static const Color blueDark = Color(0xFF2F80ED);
   static const Color blueDarker = Color(0xFF1E40AF);
   static const Color blueDarkest = Color(0xFF1E3A8A);
-  static const Color blueLight = Color(0xFF60A5FA);
+  static const Color blueLight = Color(0xFF6EA8F2);
   static const Color blueLighter = Color(0xFF93C5FD);
 
-  static const Color brandPrimary = Color(0xFF2962FF);
-  static const Color actionPrimary = Color(0xFF007AFF);
+  static const Color brandPrimary = Color(0xFF2F80ED);
+  static const Color actionPrimary = Color(0xFF2F80ED);
   static const Color actionHover = Color(0xFF0066CC);
 
-  static const Color successGreen = Color(0xFF00C853);
+  static const Color successGreen = Color(0xFF35B86B);
   static const Color warningOrange = Color(0xFFFFA726);
   static const Color errorRed = Color(0xFFEF5350);
   static const Color pixGreen = Color(0xFF32BCAD);
 
-  static const Color borderDefault = Color(0xFF2C2C2E);
+  static const Color borderDefault = Color(0xFF1C2A3D);
   static const Color borderHover = Color(0xFF007AFF);
   static const Color borderActive = Color(0xFF2962FF);
 

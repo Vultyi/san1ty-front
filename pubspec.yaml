@@ -50,6 +50,9 @@ dependencies:
   # Data formatting and masking
   mask_text_input_formatter: ^2.9.0
 
+  # Fonts
+  google_fonts: ^6.2.1
+
   # OTA update (GitHub Releases)
   package_info_plus: ^8.3.0
   ota_update: ^7.1.0

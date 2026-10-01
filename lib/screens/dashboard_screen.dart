@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
-import 'package:estrutura_front_san1ty/constants/dimensions.dart';
-import 'package:estrutura_front_san1ty/constants/text_styles.dart';
-import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
+import 'package:estrutura_front_san1ty/screens/pix_pay_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/screens/statement_screen.dart';
 import 'package:estrutura_front_san1ty/screens/wallet_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
+/// Home bancária — spec 390x844, Inter, sem glow/sombras azuis.
 class DashboardScreen extends StatefulWidget {
   static const String routeName = '/dashboard';
 
@@ -18,18 +18,13 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 0;
-  bool _balanceVisible = true;
-  String _userName = 'Olá';
+TextStyle _inter(double size, FontWeight weight, Color color, {double height = 1.4}) {
+  return GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color, height: height);
+}
 
-  static const List<String> _titles = [
-    'San1ty',
-    'Carteira',
-    'PIX',
-    'Vendas',
-    'Histórico',
-  ];
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _balanceVisible = true;
+  String _userName = 'por aqui';
 
   @override
   void initState() {
@@ -47,428 +42,494 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _soon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Disponível em breve'), behavior: SnackBarBehavior.floating),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       body: SafeArea(
-        child: _selectedIndex == 0 ? _buildMainDashboard() : _buildPlaceholderScreen(_titles[_selectedIndex]),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          children: [
+            const SizedBox(height: 12),
+            _buildHeader(context),
+            const SizedBox(height: 20),
+            _buildUserArea(),
+            const SizedBox(height: 20),
+            _buildBalanceCard(context),
+            const SizedBox(height: 24),
+            _buildShortcuts(context),
+            const SizedBox(height: 24),
+            _buildPerformanceCard(context),
+            const SizedBox(height: 16),
+            _buildGoalCard(),
+            const SizedBox(height: 16),
+            _buildTipCard(context),
+            const SizedBox(height: 16),
+            _buildSecurityCard(context),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
-  Widget _buildMainDashboard() {
-    return ListView(
-      padding: Dimensions.screenPadding,
-      children: [
-        const SizedBox(height: Dimensions.space16),
-        _buildHeader(),
-        const SizedBox(height: Dimensions.space20),
-        _buildBalanceHero(),
-        const SizedBox(height: Dimensions.space24),
-        _buildSectionTitle('Ações rápidas'),
-        const SizedBox(height: Dimensions.space16),
-        _buildQuickActionsGrid(context),
-        const SizedBox(height: Dimensions.space24),
-        _buildOverviewCards(),
-        const SizedBox(height: Dimensions.space24),
-        _buildMonthlyGoalCard(),
-        const SizedBox(height: Dimensions.space32),
-      ],
-    );
-  }
-
-  Widget _buildPlaceholderScreen(String title) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  // Header ~120px: menu 44px esq, sino 44px dir com ponto.
+  Widget _buildHeader(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(Icons.construction, size: 64, color: AppColors.textSecondary),
-          const SizedBox(height: Dimensions.space16),
-          Text(
-            '$title\nEm breve!',
-            style: AppTextStyles.heading2,
-            textAlign: TextAlign.center,
+          _tapBox(
+            onTap: () => _soon(context),
+            child: const Icon(Icons.menu, size: 24, color: AppColors.textPrimary),
+          ),
+          _tapBox(
+            onTap: () => _soon(context),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_outlined, size: 24, color: AppColors.textPrimary),
+                Positioned(
+                  right: 2,
+                  top: 2,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.actionPrimary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _tapBox({required VoidCallback onTap, required Widget child}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        child: child,
+      ),
+    );
+  }
+
+  // Avatar 64 + nome 20/600 + subtexto 14.
+  Widget _buildUserArea() {
     return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.brandPrimary, AppColors.actionPrimary],
-            ),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Center(
-            child: Text(
-              _userName.isNotEmpty ? _userName[0].toUpperCase() : '?',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: const BoxDecoration(
+                color: AppColors.actionPrimary,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                _userName.isNotEmpty ? _userName[0].toUpperCase() : '?',
+                style: _inter(24, FontWeight.w700, Colors.white),
               ),
             ),
-          ),
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundTertiary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.backgroundPrimary, width: 2),
+                ),
+                child: const Icon(Icons.photo_camera_outlined, size: 12, color: AppColors.textSecondary),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: Dimensions.space12),
+        const SizedBox(width: 16),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Olá,', style: AppTextStyles.bodySmall),
-            Text(_userName, style: AppTextStyles.heading3),
+            Text('Olá, $_userName', style: _inter(20, FontWeight.w600, AppColors.textPrimary, height: 1.2)),
+            const SizedBox(height: 4),
+            Text('Que bom ter você por aqui.',
+                style: _inter(14, FontWeight.w400, AppColors.textSecondary)),
           ],
-        ),
-        const Spacer(),
-        _IconButton(
-          icon: _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          onTap: () => setState(() => _balanceVisible = !_balanceVisible),
         ),
       ],
     );
   }
 
-  Widget _buildBalanceHero() {
+  // Card saldo 150-165px, radius 18, padding 20.
+  Widget _buildBalanceCard(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, WalletScreen.routeName),
       child: Container(
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1D4ED8), Color(0xFF2962FF)],
-          ),
-          borderRadius: BorderRadius.circular(Dimensions.radius18),
-          boxShadow: const [AppColors.shadowBlue],
+          color: AppColors.backgroundSecondary,
+          border: Border.all(color: AppColors.borderDefault, width: 1),
+          borderRadius: BorderRadius.circular(18),
         ),
-        padding: Dimensions.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Saldo em conta',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFFB0CFFF)),
+                Text('Saldo em conta',
+                    style: _inter(14, FontWeight.w500, AppColors.textSecondary)),
+                GestureDetector(
+                  onTap: () => setState(() => _balanceVisible = !_balanceVisible),
+                  child: Icon(
+                    _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    size: 24,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                const Icon(Icons.account_balance_wallet_outlined, color: Colors.white70, size: 20),
               ],
             ),
-            const SizedBox(height: Dimensions.space8),
-            Text(
-              _balanceVisible ? 'R\$ 1.356,98' : 'R\$ ••••••',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white, height: 1.2),
-            ),
-            const SizedBox(height: Dimensions.space12),
+            const SizedBox(height: 12),
             Row(
               children: [
-                const Text(
-                  'Ver carteira',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                Text(
+                  _balanceVisible ? 'R\$ ••••••' : 'R\$ ••••••',
+                  style: _inter(40, FontWeight.w700, AppColors.textPrimary, height: 1.1),
                 ),
-                const SizedBox(width: Dimensions.space8),
-                const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                const SizedBox(width: 12),
+                const Icon(Icons.chevron_right, size: 24, color: AppColors.textSecondary),
               ],
             ),
+            const SizedBox(height: 12),
+            Text('Seu dinheiro rende mais aqui',
+                style: _inter(14, FontWeight.w400, AppColors.textSecondary)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(title, style: AppTextStyles.heading3);
-  }
-
-  Widget _buildQuickActionsGrid(BuildContext context) {
-    final items = [
-      _ActionItem(
-        label: 'PIX',
-        icon: Icons.pix_outlined,
-        tint: AppColors.pixGreen,
-        onTap: () => Navigator.pushNamed(context, PixHomeScreen.routeName),
-      ),
-      _ActionItem(
-        label: 'Vendas',
-        icon: Icons.shopping_bag_outlined,
-        tint: AppColors.actionPrimary,
-        onTap: () => Navigator.pushNamed(context, SalesScreen.routeName),
-      ),
-      _ActionItem(
-        label: 'Histórico',
-        icon: Icons.receipt_long_outlined,
-        tint: AppColors.brandPrimary,
-        onTap: () => Navigator.pushNamed(context, StatementScreen.routeName),
-      ),
-      _ActionItem(
-        label: 'Comércio',
-        icon: Icons.storefront_outlined,
-        tint: AppColors.warningOrange,
-        onTap: () => Navigator.pushNamed(context, CommerceIntroScreen.routeName),
-      ),
-    ];
-
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 4,
-      crossAxisSpacing: Dimensions.space12,
-      mainAxisSpacing: Dimensions.space12,
-      childAspectRatio: 0.92,
-      children: items.map(_buildQuickActionCard).toList(),
+  // 4 atalhos: Pix / Vendas / Pagar conta / Em breve.
+  Widget _buildShortcuts(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _shortcut(
+            context,
+            icon: Icons.pix_outlined,
+            iconSize: 28,
+            iconColor: AppColors.actionPrimary,
+            title: 'Pix',
+            subtitle: 'Enviar e receber',
+            onTap: () => Navigator.pushNamed(context, PixHomeScreen.routeName),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _shortcut(
+            context,
+            icon: Icons.shopping_bag_outlined,
+            iconSize: 28,
+            iconColor: AppColors.actionPrimary,
+            title: 'Vendas',
+            subtitle: 'Cobrar clientes',
+            onTap: () => Navigator.pushNamed(context, SalesScreen.routeName),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _shortcut(
+            context,
+            icon: Icons.barcode_reader,
+            iconSize: 28,
+            iconColor: AppColors.actionPrimary,
+            title: 'Pagar conta',
+            subtitle: 'Boletos e Pix',
+            onTap: () => Navigator.pushNamed(context, PixPayScreen.routeName),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _shortcut(
+            context,
+            icon: Icons.close,
+            iconSize: 24,
+            iconColor: AppColors.textTertiary,
+            title: 'Em breve',
+            subtitle: 'Novidades',
+            onTap: () => _soon(context),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildQuickActionCard(_ActionItem item) {
+  Widget _shortcut(
+    BuildContext context, {
+    required IconData icon,
+    required double iconSize,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onTap: item.onTap,
+      onTap: onTap,
       child: Container(
+        height: 140,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.backgroundSecondary,
           border: Border.all(color: AppColors.borderDefault, width: 1),
-          borderRadius: BorderRadius.circular(Dimensions.radius16),
+          borderRadius: BorderRadius.circular(16),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: item.tint.withAlpha((0.14 * 255).round()),
-                borderRadius: BorderRadius.circular(Dimensions.radius16),
-              ),
-              child: Icon(item.icon, color: item.tint, size: 24),
-            ),
-            const SizedBox(height: Dimensions.space8),
-            Text(
-              item.label,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-              textAlign: TextAlign.center,
-            ),
+            Icon(icon, size: iconSize, color: iconColor),
+            const SizedBox(height: 8),
+            Text(title,
+                style: _inter(15, FontWeight.w600, AppColors.textPrimary, height: 1.2),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 4),
+            Text(subtitle,
+                style: _inter(12, FontWeight.w400, AppColors.textSecondary, height: 1.2),
+                textAlign: TextAlign.center),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOverviewCards() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _buildMetricCard(
-            title: 'Meus ganhos',
-            value: 'R\$ 245,50',
-            icon: Icons.trending_up,
-            iconColor: AppColors.successGreen,
-            subtitle: '+15% vs ontem',
-          ),
-        ),
-        const SizedBox(width: Dimensions.space16),
-        Expanded(child: _buildSummaryCard()),
-      ],
-    );
-  }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color iconColor,
-    required String subtitle,
-  }) {
-    return Container(
+  Widget _sectionCard({required Widget child, VoidCallback? onTap}) {
+    final card = Container(
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.backgroundSecondary,
         border: Border.all(color: AppColors.borderDefault, width: 1),
-        borderRadius: BorderRadius.circular(Dimensions.radius16),
+        borderRadius: BorderRadius.circular(18),
       ),
-      padding: Dimensions.cardPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: child,
+    );
+    if (onTap == null) return card;
+    return GestureDetector(onTap: onTap, child: card);
+  }
+
+  Widget _iconBox(IconData icon, {Color? color}) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: (color ?? AppColors.actionPrimary).withAlpha((0.12 * 255).round()),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, size: 24, color: color ?? AppColors.actionPrimary),
+    );
+  }
+
+  // Seu desempenho -> extrato.
+  Widget _buildPerformanceCard(BuildContext context) {
+    return _sectionCard(
+      onTap: () => Navigator.pushNamed(context, StatementScreen.routeName),
+      child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconColor.withAlpha((0.14 * 255).round()),
-              borderRadius: BorderRadius.circular(Dimensions.radius12),
+          _iconBox(Icons.trending_up, color: AppColors.successGreen),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Seu desempenho',
+                    style: _inter(17, FontWeight.w600, AppColors.textPrimary, height: 1.2)),
+                const SizedBox(height: 4),
+                Text('Acompanhe como está o seu negócio',
+                    style: _inter(14, FontWeight.w400, AppColors.textSecondary)),
+              ],
             ),
-            child: Icon(icon, color: iconColor, size: 20),
           ),
-          const SizedBox(height: Dimensions.space16),
-          Text(title, style: AppTextStyles.bodySmall),
-          const SizedBox(height: Dimensions.space4),
-          const Text('R\$ 245,50',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.successGreen)),
-          const SizedBox(height: Dimensions.space8),
-          Text(subtitle, style: AppTextStyles.bodySmall, textAlign: TextAlign.right),
+          const Icon(Icons.chevron_right, size: 24, color: AppColors.textSecondary),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
-        border: Border.all(color: AppColors.borderDefault, width: 1),
-        borderRadius: BorderRadius.circular(Dimensions.radius16),
-      ),
-      padding: Dimensions.cardPadding,
+  // Meta do mês.
+  Widget _buildGoalCard() {
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Resumo',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
-          const SizedBox(height: Dimensions.space16),
-          _buildDataRow('Saldo disponível', 'R\$ 1.245,50'),
-          const SizedBox(height: Dimensions.space12),
-          _buildDataRow('Vendas hoje', '18'),
-          const SizedBox(height: Dimensions.space12),
-          _buildDataRow('Meta do mês', 'R\$ 5.000'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: AppTextStyles.bodySmall),
-        Text(value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-      ],
-    );
-  }
-
-  Widget _buildMonthlyGoalCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2962FF), Color(0xFF007AFF)],
-        ),
-        borderRadius: BorderRadius.circular(Dimensions.radius18),
-        boxShadow: const [AppColors.shadowBlue],
-      ),
-      padding: Dimensions.cardPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Meta do mês',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
-          const SizedBox(height: Dimensions.space12),
-          const Text('R\$ 1.245,50',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white)),
-          const SizedBox(height: Dimensions.space8),
-          const Text('72% da meta alcançada', style: TextStyle(fontSize: 12, color: Color(0xFFB0CFFF))),
-          const SizedBox(height: Dimensions.space16),
+          Text('Meta do mês', style: _inter(17, FontWeight.w600, AppColors.textPrimary, height: 1.2)),
+          const SizedBox(height: 4),
+          Text('Faltam R\$ 1.390 para a meta de R\$ 5.000',
+              style: _inter(14, FontWeight.w400, AppColors.textSecondary)),
+          const SizedBox(height: 12),
+          Text('R\$ 3.610,00', style: _inter(26, FontWeight.w700, AppColors.textPrimary, height: 1.1)),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: const LinearProgressIndicator(
               value: 0.72,
               minHeight: 8,
-              backgroundColor: Color(0x40000000),
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              backgroundColor: AppColors.backgroundTertiary,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.actionPrimary),
             ),
           ),
-          const SizedBox(height: Dimensions.space12),
-          const Align(
+          const SizedBox(height: 8),
+          Align(
             alignment: Alignment.centerRight,
-            child: Text('72%', style: TextStyle(fontSize: 12, color: Color(0xFFB0CFFF))),
+            child: Text('72%', style: _inter(14, FontWeight.w600, AppColors.actionPrimary)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      backgroundColor: AppColors.backgroundPrimary,
-      selectedItemColor: AppColors.actionPrimary,
-      unselectedItemColor: AppColors.textSecondary,
-      type: BottomNavigationBarType.fixed,
-      elevation: 0,
-      iconSize: 22,
-      selectedFontSize: 11,
-      unselectedFontSize: 11,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
-        BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Carteira'),
-        BottomNavigationBarItem(icon: Icon(Icons.pix_outlined), label: 'PIX'),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined), label: 'Vendas'),
-        BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Histórico'),
-      ],
-      currentIndex: _selectedIndex,
-      onTap: (index) {
-        if (index == 0) {
-          setState(() => _selectedIndex = 0);
-          return;
-        }
-        // Não troca o índice: telas abrem por cima e o voltar cai no Início.
-        if (index == 1) {
-          Navigator.pushNamed(context, WalletScreen.routeName);
-        } else if (index == 2) {
-          Navigator.pushNamed(context, PixHomeScreen.routeName);
-        } else if (index == 3) {
-          Navigator.pushNamed(context, SalesScreen.routeName);
-        } else if (index == 4) {
-          Navigator.pushNamed(context, StatementScreen.routeName);
-        }
-      },
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _IconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.backgroundSecondary,
-          borderRadius: BorderRadius.circular(Dimensions.radius12),
-        ),
-        child: Icon(icon, color: AppColors.textPrimary, size: 24),
+  // Dica do banco.
+  Widget _buildTipCard(BuildContext context) {
+    return _sectionCard(
+      onTap: () => _soon(context),
+      child: Row(
+        children: [
+          _iconBox(Icons.lightbulb_outlined, color: AppColors.warningOrange),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Dica do seu banco',
+                    style: _inter(17, FontWeight.w600, AppColors.textPrimary, height: 1.2)),
+                const SizedBox(height: 4),
+                Text('Ative o Pix automático e nunca perca uma venda',
+                    style: _inter(14, FontWeight.w400, AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, size: 24, color: AppColors.textSecondary),
+        ],
       ),
     );
   }
-}
 
-class _ActionItem {
-  final String label;
-  final IconData icon;
-  final Color tint;
-  final VoidCallback? onTap;
+  // Segurança com botão pill.
+  Widget _buildSecurityCard(BuildContext context) {
+    return _sectionCard(
+      child: Row(
+        children: [
+          _iconBox(Icons.shield_outlined, color: AppColors.actionPrimary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Segurança', style: _inter(17, FontWeight.w600, AppColors.textPrimary, height: 1.2)),
+                const SizedBox(height: 4),
+                Text('Verificação em 2 etapas protege sua conta',
+                    style: _inter(13, FontWeight.w400, AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 105,
+            height: 42,
+            child: ElevatedButton(
+              onPressed: () => _soon(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.actionPrimary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21)),
+                padding: EdgeInsets.zero,
+              ),
+              child: Text('Ativar', style: _inter(14, FontWeight.w600, Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  const _ActionItem({
-    required this.label,
-    required this.icon,
-    required this.tint,
-    this.onTap,
-  });
+  // Navegação inferior: 4 itens, indicador 32x3 no ativo.
+  Widget _buildBottomNav(BuildContext context) {
+    const items = [
+      (Icons.home_outlined, 'Início'),
+      (Icons.account_balance_wallet_outlined, 'Carteira'),
+      (Icons.shopping_bag_outlined, 'Vendas'),
+      (Icons.receipt_long_outlined, 'Histórico'),
+    ];
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundPrimary,
+        border: Border(top: BorderSide(color: AppColors.borderDefault, width: 1)),
+      ),
+      padding: EdgeInsets.only(
+        top: 8,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < items.length; i++)
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (i == 0) return;
+                  if (i == 1) {
+                    Navigator.pushNamed(context, WalletScreen.routeName);
+                  } else if (i == 2) {
+                    Navigator.pushNamed(context, SalesScreen.routeName);
+                  } else {
+                    Navigator.pushNamed(context, StatementScreen.routeName);
+                  }
+                },
+                child: Container(
+                  height: 60,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(items[i].$1,
+                          size: 24,
+                          color: i == 0 ? AppColors.actionPrimary : AppColors.textSecondary),
+                      const SizedBox(height: 4),
+                      Text(items[i].$2,
+                          style: _inter(12, FontWeight.w500,
+                              i == 0 ? AppColors.actionPrimary : AppColors.textSecondary)),
+                      const SizedBox(height: 4),
+                      Container(
+                        width: 32,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: i == 0 ? AppColors.actionPrimary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
