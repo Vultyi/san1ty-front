@@ -92,10 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-
+      debugPrint('LOGIN_ERROR: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erro de conexão. Tente novamente.'),
+        SnackBar(
+          content: Text('Erro: $e'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.red,
         ),
@@ -152,8 +152,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erro de conexão. Tente novamente.'),
+        SnackBar(
+          content: Text('Erro: $e'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.red,
         ),

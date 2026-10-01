@@ -12,7 +12,7 @@ class ApiSecurityService {
     'API_BASE_URL',
     defaultValue: 'https://api.san1typay.com',
   );
-  static const Duration requestTimeout = Duration(seconds: 30);
+  static const Duration requestTimeout = Duration(seconds: 60);
   
   final SecureStorageService _secureStorage = SecureStorageService();
   final http.Client _httpClient = http.Client();
