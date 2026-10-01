@@ -29,14 +29,9 @@ class CommercePlanScreen extends StatelessWidget {
             const SizedBox(height: Dimensions.space24),
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0x1A007AFF), Color(0x0D2962FF)],
-                ),
-                border: Border.all(color: AppColors.actionPrimary, width: 2),
+                color: AppColors.backgroundSecondary,
+                border: Border.all(color: AppColors.borderDefault, width: 1),
                 borderRadius: BorderRadius.circular(Dimensions.radius20),
-                boxShadow: const [AppColors.shadowBlue],
               ),
               padding: const EdgeInsets.all(24),
               child: Column(

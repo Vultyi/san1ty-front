@@ -79,13 +79,9 @@ class _WalletScreenState extends State<WalletScreen>
   Widget _buildBalanceCard() {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2962FF), Color(0xFF007AFF)],
-        ),
+        color: AppColors.backgroundSecondary,
+        border: Border.all(color: AppColors.borderDefault, width: 1),
         borderRadius: BorderRadius.circular(Dimensions.radius20),
-        boxShadow: const [AppColors.shadowBlue],
       ),
       padding: const EdgeInsets.all(24),
       child: Column(

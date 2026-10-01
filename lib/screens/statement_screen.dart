@@ -104,11 +104,9 @@ class _StatementScreenState extends State<StatementScreen> {
       padding: Dimensions.screenPadding,
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF2962FF), Color(0xFF007AFF)],
-          ),
+          color: AppColors.backgroundSecondary,
+          border: Border.all(color: AppColors.borderDefault, width: 1),
           borderRadius: BorderRadius.circular(Dimensions.radius18),
-          boxShadow: const [AppColors.shadowBlue],
         ),
         padding: const EdgeInsets.all(24),
         child: Column(

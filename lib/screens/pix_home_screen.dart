@@ -303,7 +303,7 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
                 ),
               )
             : const Center(
-                child: Icon(Icons.qr_code, size: 64, color: Color(0xFF666666)),
+                child: Icon(Icons.qr_code, size: 64, color: AppColors.textTertiary),
               ),
       ),
     );
@@ -317,16 +317,16 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       decoration: InputDecoration(
         hintText: 'Digite o valor',
-        hintStyle: const TextStyle(color: Color(0xFF666666), fontSize: 20),
+        hintStyle: const TextStyle(color: AppColors.textPlaceholder, fontSize: 20),
         filled: true,
-        fillColor: const Color(0xFF000000),
+        fillColor: AppColors.backgroundSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF333333), width: 2),
+          borderSide: const BorderSide(color: AppColors.borderDefault, width: 2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF333333), width: 2),
+          borderSide: const BorderSide(color: AppColors.borderDefault, width: 2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

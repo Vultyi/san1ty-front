@@ -323,15 +323,6 @@ class _LoginScreenState extends State<LoginScreen> {
             color: AppColors.backgroundSecondary,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: isFocused ? AppColors.bluePrimary : AppColors.borderNormal, width: 2),
-            boxShadow: isFocused
-                ? [
-                    BoxShadow(
-                      color: AppColors.bluePrimary.withAlpha((0.2 * 255).round()),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : [],
           ),
           child: TextFormField(
             controller: controller,

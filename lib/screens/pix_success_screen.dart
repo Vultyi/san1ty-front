@@ -84,8 +84,8 @@ class PixSuccessScreen extends StatelessWidget {
       child: Container(
         width: 96,
         height: 96,
-        decoration: const BoxDecoration(color: Color(0xFF00FF88), shape: BoxShape.circle),
-        child: const Icon(Icons.check, size: 56, color: Colors.black),
+        decoration: const BoxDecoration(color: AppColors.successGreen, shape: BoxShape.circle),
+        child: const Icon(Icons.check, size: 56, color: Colors.white),
       ),
     );
   }

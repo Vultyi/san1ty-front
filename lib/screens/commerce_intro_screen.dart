@@ -39,11 +39,8 @@ class CommerceIntroScreen extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF007AFF), Color(0xFF2962FF)],
-                  ),
+                  color: AppColors.actionPrimary,
                   borderRadius: BorderRadius.circular(Dimensions.radius24),
-                  boxShadow: const [AppColors.shadowBlue],
                 ),
                 child: const Icon(Icons.qr_code, color: Colors.white, size: 40),
               ),

@@ -151,12 +151,12 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFF333333)),
+          border: Border.all(color: AppColors.borderDefault),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF60A5FA), size: 32),
+            Icon(icon, color: AppColors.blueLight, size: 32),
             const SizedBox(height: Dimensions.space12),
             Text(label, style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 14)),
           ],
@@ -170,7 +170,7 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF333333)),
+        border: Border.all(color: AppColors.borderDefault),
         boxShadow: const [
           BoxShadow(color: Color(0x33000000), blurRadius: 20, offset: Offset(0, 8)),
         ],
@@ -199,13 +199,13 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF000000),
+              color: AppColors.backgroundSecondary,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF333333)),
+              border: Border.all(color: AppColors.borderDefault),
             ),
             child: Icon(
               _iconForType(key.type),
-              color: const Color(0xFF60A5FA),
+              color: AppColors.blueLight,
               size: 20,
             ),
           ),
@@ -214,7 +214,7 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(key.label, style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 12)),
+                Text(key.label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                 const SizedBox(height: 4),
                 Text(key.value, style: const TextStyle(color: Colors.white, fontSize: 14), overflow: TextOverflow.ellipsis),
               ],
@@ -233,12 +233,12 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: const Color(0xFF000000),
+        color: AppColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF333333)),
+        border: Border.all(color: AppColors.borderDefault),
       ),
       child: IconButton(
-        icon: Icon(icon, color: const Color(0xFF60A5FA), size: 20),
+        icon: Icon(icon, color: AppColors.blueLight, size: 20),
         onPressed: onPressed,
         padding: EdgeInsets.zero,
         splashRadius: 20,
@@ -272,7 +272,7 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    color: const Color(0xFF000000),
+                    color: AppColors.backgroundSecondary,
                   ),
                   child: Row(
                     children: const [
