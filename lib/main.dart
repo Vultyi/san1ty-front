@@ -4,6 +4,7 @@ import 'package:estrutura_front_san1ty/screens/commerce_list_screen.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_onboarding_screen.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_plan_screen.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_dashboard_screen.dart';
+import 'package:estrutura_front_san1ty/screens/dashboard_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/screens/statement_screen.dart';
 import 'package:estrutura_front_san1ty/screens/wallet_screen.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
     CommerceOnboardingScreen.routeName: (_) => const CommerceOnboardingScreen(),
     CommerceListScreen.routeName: (_) => const CommerceListScreen(),
     CommerceDashboardScreen.routeName: (_) => const CommerceDashboardScreen(),
+    DashboardScreen.routeName: (_) => const DashboardScreen(),
     SalesScreen.routeName: (_) => const SalesScreen(),
     StatementScreen.routeName: (_) => const StatementScreen(),
     WalletScreen.routeName: (_) => const WalletScreen(),
