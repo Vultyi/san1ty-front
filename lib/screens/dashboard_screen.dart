@@ -25,10 +25,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   static const List<String> _titles = [
     'San1ty',
-    'QR Code',
+    'Carteira',
+    'PIX',
     'Vendas',
-    'Saques',
-    'Assistente',
+    'Histórico',
   ];
 
   @override
@@ -405,20 +405,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       unselectedItemColor: AppColors.textSecondary,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
+      iconSize: 22,
+      selectedFontSize: 11,
+      unselectedFontSize: 11,
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Dashboard'),
-        BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: 'QR Code'),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Vendas'),
-        BottomNavigationBarItem(icon: Icon(Icons.arrow_downward), label: 'Saques'),
-        BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Assistente'),
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
+        BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Carteira'),
+        BottomNavigationBarItem(icon: Icon(Icons.pix_outlined), label: 'PIX'),
+        BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined), label: 'Vendas'),
+        BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Histórico'),
       ],
       currentIndex: _selectedIndex,
       onTap: (index) {
-        setState(() => _selectedIndex = index);
-        if (index == 2) {
-          Navigator.pushNamed(context, SalesScreen.routeName);
-        } else if (index == 1) {
+        if (index == 0) {
+          setState(() => _selectedIndex = 0);
+          return;
+        }
+        // Não troca o índice: telas abrem por cima e o voltar cai no Início.
+        if (index == 1) {
           Navigator.pushNamed(context, WalletScreen.routeName);
+        } else if (index == 2) {
+          Navigator.pushNamed(context, PixHomeScreen.routeName);
+        } else if (index == 3) {
+          Navigator.pushNamed(context, SalesScreen.routeName);
+        } else if (index == 4) {
+          Navigator.pushNamed(context, StatementScreen.routeName);
         }
       },
     );
