@@ -18,7 +18,14 @@ class CommerceIntroScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            final nav = Navigator.of(context);
+            if (nav.canPop()) {
+              nav.pop();
+            } else {
+              nav.pushReplacementNamed('/dashboard');
+            }
+          },
         ),
         title: const Text('Comércio'),
       ),

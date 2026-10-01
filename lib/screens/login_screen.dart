@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
-import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
+import 'package:estrutura_front_san1ty/screens/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = '/login';
@@ -21,12 +22,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  String _versionLabel = '';
 
   @override
   void initState() {
     super.initState();
     _emailController.addListener(_onFormChanged);
     _passwordController.addListener(_onFormChanged);
+    PackageInfo.fromPlatform().then((info) {
+      if (!mounted) return;
+      setState(() {
+        _versionLabel = 'v${info.version} (build ${info.buildNumber})';
+      });
+    });
   }
 
   @override
@@ -70,8 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (response['success'] == true) {
-        // Login bem-sucedido - navegar para commerce intro
-        Navigator.pushReplacementNamed(context, CommerceIntroScreen.routeName);
+        // Login bem-sucedido - navegar para o dashboard
+        Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
       } else {
         // Mostrar erro
         ScaffoldMessenger.of(context).showSnackBar(
@@ -419,8 +427,11 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Color(0xFF1E1E1E), width: 1)),
       ),
-      child: const Center(
-        child: Text('© 2026 San1tyPay', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textTertiary, height: 1.43)),
+      child: Center(
+        child: Text(
+          _versionLabel.isEmpty ? '© 2026 San1tyPay' : '© 2026 San1tyPay  •  $_versionLabel',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textTertiary, height: 1.43),
+        ),
       ),
     );
   }
