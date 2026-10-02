@@ -274,3 +274,15 @@ extension SalesChargeExtension on PaymentService {
   /// Libera recursos (mantido para o ciclo de vida das telas).
   void dispose() {}
 }
+
+/// Apaga uma chave PIX do usuário (soft-delete no backend).
+extension PixKeyDeleteExtension on PaymentService {
+  Future<bool> deletePixKey(String keyId) async {
+    try {
+      final response = await _apiService.delete('/api/payment/pix/keys/$keyId');
+      return response['success'] == true || response['deleted'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+}

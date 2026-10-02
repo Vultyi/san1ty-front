@@ -3,15 +3,43 @@ import 'package:flutter/services.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/screens/pix_register_key_screen.dart';
+import 'package:estrutura_front_san1ty/services/payment_service.dart';
 
 enum PixKeyType { cpf, phone, email, random }
 
+PixKeyType _typeFrom(String raw) {
+  switch (raw.toLowerCase()) {
+    case 'cpf':
+      return PixKeyType.cpf;
+    case 'phone':
+      return PixKeyType.phone;
+    case 'email':
+      return PixKeyType.email;
+    default:
+      return PixKeyType.random;
+  }
+}
+
+String _labelFor(PixKeyType type) {
+  switch (type) {
+    case PixKeyType.cpf:
+      return 'CPF';
+    case PixKeyType.phone:
+      return 'Celular';
+    case PixKeyType.email:
+      return 'E-mail';
+    case PixKeyType.random:
+      return 'Aleatória';
+  }
+}
+
 class PixKeyModel {
+  final String id;
   final PixKeyType type;
   final String label;
   final String value;
 
-  PixKeyModel({required this.type, required this.label, required this.value});
+  PixKeyModel({required this.id, required this.type, required this.label, required this.value});
 }
 
 class PixManageKeysScreen extends StatefulWidget {
@@ -24,27 +52,60 @@ class PixManageKeysScreen extends StatefulWidget {
 }
 
 class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
-  final List<PixKeyModel> _keys = [
-    PixKeyModel(type: PixKeyType.cpf, label: 'CPF', value: '123.456.789-00'),
-    PixKeyModel(type: PixKeyType.phone, label: 'Celular', value: '(11) 99999-0000'),
-  ];
+  final PaymentService _service = PaymentService();
+  final List<PixKeyModel> _keys = [];
+  bool _loading = true;
 
-  void _addKey(PixKeyModel key) {
-    setState(() {
-      _keys.insert(0, key);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Chave cadastrada com sucesso!')),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadKeys();
   }
 
-  void _deleteKey(int index) {
-    setState(() {
-      _keys.removeAt(index);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Chave removida')), 
-    );
+  Future<void> _loadKeys() async {
+    if (!mounted) return;
+    setState(() => _loading = true);
+    try {
+      final response = await _service.getPixKeys();
+      final items = response['keys'];
+      final loaded = <PixKeyModel>[];
+      if (items is List) {
+        for (final item in items) {
+          if (item is! Map) continue;
+          final type = _typeFrom(item['key_type']?.toString() ?? '');
+          loaded.add(PixKeyModel(
+            id: item['id']?.toString() ?? '',
+            type: type,
+            label: _labelFor(type),
+            value: item['key_value']?.toString() ?? '',
+          ));
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _keys
+          ..clear()
+          ..addAll(loaded);
+      });
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _deleteKey(int index) async {
+    final key = _keys[index];
+    final ok = await _service.deletePixKey(key.id);
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _keys.removeAt(index));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chave removida')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível remover. Tente de novo.')),
+      );
+    }
   }
 
   void _copyKey(String value) {
@@ -143,7 +204,7 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
           context,
           PixRegisterKeyScreen.routeName,
           arguments: {'keyType': keyTypeString},
-        );
+        ).then((_) => _loadKeys());
       },
       child: Container(
         width: (MediaQuery.of(context).size.width - 20 * 2 - 24) / 2,
@@ -166,6 +227,23 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
   }
 
   Widget _buildKeysList() {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_keys.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            'Nenhuma chave cadastrada ainda.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+        ),
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
