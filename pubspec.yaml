@@ -53,6 +53,9 @@ dependencies:
   # Fonts
   google_fonts: ^6.2.1
 
+  # Share
+  share_plus: ^10.1.2
+
   # OTA update (GitHub Releases)
   package_info_plus: ^8.3.0
   ota_update: ^7.1.0

@@ -159,3 +159,118 @@ class PaymentService {
     }
   }
 }
+/// Status de uma cobrança Pix para a tela de Vendas.
+enum PaymentStatus { pending, paid, expired }
+
+/// Cobrança Pix criada para compartilhar com o cliente.
+class PixCharge {
+  final String id;
+  final int amountCents;
+  final String pixCode;
+  final PaymentStatus status;
+
+  const PixCharge({
+    required this.id,
+    required this.amountCents,
+    required this.pixCode,
+    required this.status,
+  });
+
+  PixCharge copyWith({PaymentStatus? status}) => PixCharge(
+        id: id,
+        amountCents: amountCents,
+        pixCode: pixCode,
+        status: status ?? this.status,
+      );
+}
+
+/// Erro de fluxo de cobrança com mensagem pronta para a UI.
+class PaymentException implements Exception {
+  final String message;
+  const PaymentException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+PaymentStatus _mapStatus(String? raw) {
+  switch ((raw ?? '').toLowerCase()) {
+    case 'paid':
+    case 'approved':
+    case 'completed':
+    case 'accredited':
+      return PaymentStatus.paid;
+    case 'expired':
+    case 'cancelled':
+    case 'canceled':
+    case 'failed':
+    case 'rejected':
+      return PaymentStatus.expired;
+    default:
+      return PaymentStatus.pending;
+  }
+}
+
+/// Extensão da tela de Vendas sobre o [PaymentService] existente.
+extension SalesChargeExtension on PaymentService {
+  /// Cria cobrança Pix e devolve o copia-e-cola.
+  Future<PixCharge> createCharge({
+    required int amountCents,
+    required String description,
+  }) async {
+    late final Map<String, dynamic> response;
+    try {
+      response = await _apiService.post('/api/payment/create', body: {
+        'currency': 'BRL',
+        'amount': amountCents / 100.0,
+        'description': description,
+      });
+    } catch (_) {
+      throw const PaymentException('Erro de conexão. Verifique sua internet.');
+    }
+    if (response['success'] == false) {
+      throw PaymentException(
+        response['error']?.toString() ?? 'Não foi possível gerar a cobrança.',
+      );
+    }
+    final sessionId = response['session_id'] as String?;
+    if (sessionId != null && sessionId.isNotEmpty) {
+      await _secureStorage.savePaymentSession(sessionId);
+    }
+    final id = response['payment_id']?.toString() ?? '';
+    final code = (response['qr_code_text'] ?? response['qr_code'] ?? '').toString();
+    if (id.isEmpty) {
+      throw const PaymentException('Resposta inválida do servidor.');
+    }
+    if (code.isEmpty) {
+      throw const PaymentException(
+        'QR indisponível no momento. Tente novamente.',
+      );
+    }
+    return PixCharge(
+      id: id,
+      amountCents: amountCents,
+      pixCode: code,
+      status: _mapStatus(response['status']?.toString()),
+    );
+  }
+
+  /// Consulta o status atual de uma cobrança.
+  Future<PaymentStatus> fetchStatus(String id) async {
+    late final Map<String, dynamic> response;
+    try {
+      response = await _apiService.get('/api/payment/$id/status');
+    } catch (_) {
+      throw const PaymentException('Erro de conexão. Verifique sua internet.');
+    }
+    if (response['success'] == false && response['status'] == null) {
+      throw PaymentException(
+        response['error']?.toString() ?? 'Não foi possível consultar o status.',
+      );
+    }
+    return _mapStatus(response['status']?.toString());
+  }
+
+  /// Libera recursos (mantido para o ciclo de vida das telas).
+  void dispose() {}
+}
