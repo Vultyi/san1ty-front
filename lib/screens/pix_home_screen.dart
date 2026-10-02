@@ -137,7 +137,7 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
             icon: const Icon(Icons.arrow_back, color: Color(0xFF60A5FA)),
             onPressed: () => Navigator.of(context).pop(),
             splashRadius: 24,
-            hoverColor: const Color(0x1A93C5FD),
+            hoverColor: AppColors.overlay10,
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -184,11 +184,11 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
         height: 70,
         decoration: BoxDecoration(
           color: AppColors.backgroundSecondary,
-          border: Border.all(color: const Color(0xFF333333), width: 1),
+          border: Border.all(color: AppColors.borderDefault, width: 1),
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x33000000),
+              color: const Color(0x33000000),
               blurRadius: 10,
               offset: Offset(0, 4),
             ),
@@ -197,7 +197,7 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 24, color: const Color(0xFF60A5FA)),
+            Icon(icon, size: 24, color: AppColors.blueLight),
             const SizedBox(width: Dimensions.space12),
             Text(label, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w400)),
           ],
@@ -211,12 +211,12 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: Dimensions.space20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        border: Border.all(color: const Color(0xFF333333), width: 1),
+        color: AppColors.backgroundSecondary,
+        border: Border.all(color: AppColors.borderDefault, width: 1),
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33000000),
+            color: const Color(0x33000000),
             blurRadius: 20,
             offset: Offset(0, 8),
           ),
@@ -235,12 +235,12 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
             onPressed: _canGenerateQr ? _generateQrCode : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
-              backgroundColor: const Color(0xFF1D4ED8),
-              disabledBackgroundColor: const Color(0xFF1D4ED8).withOpacity(0.5),
+              backgroundColor: AppColors.actionPrimary,
+              disabledBackgroundColor: AppColors.actionPrimary.withAlpha(128),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 0,
-              shadowColor: const Color(0x4D1D4ED8),
+              shadowColor: AppColors.blueShadow,
             ),
             child: const Text('Gerar QR Code', style: TextStyle(fontSize: 16)),
           ),
@@ -249,8 +249,8 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
             onPressed: _copyPix,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
-              foregroundColor: const Color(0xFF60A5FA),
-              side: const BorderSide(color: Color(0xFF2563EB), width: 2),
+              foregroundColor: AppColors.blueLight,
+              side: const BorderSide(color: AppColors.brandPrimary, width: 2),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: Row(
@@ -330,7 +330,7 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+          borderSide: const BorderSide(color: AppColors.brandPrimary, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       ),

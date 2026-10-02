@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
+import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 import 'package:estrutura_front_san1ty/screens/login_screen.dart';
+import 'package:estrutura_front_san1ty/screens/notifications_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
-import 'package:estrutura_front_san1ty/screens/pix_manage_keys_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_pay_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
+import 'package:estrutura_front_san1ty/screens/settings_screen.dart';
 import 'package:estrutura_front_san1ty/screens/statement_screen.dart';
-import 'package:estrutura_front_san1ty/screens/support_login_screen.dart';
 import 'package:estrutura_front_san1ty/screens/wallet_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
@@ -26,7 +27,6 @@ TextStyle _inter(double size, FontWeight weight, Color color, {double height = 1
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool _balanceVisible = true;
   String _userName = 'por aqui';
 
   @override
@@ -125,16 +125,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const Divider(color: AppColors.borderDefault, height: 1),
-            _drawerItem(context, Icons.account_balance_wallet_outlined, 'Carteira',
-                () => Navigator.pushNamed(context, WalletScreen.routeName)),
-            _drawerItem(context, Icons.pix_outlined, 'PIX',
-                () => Navigator.pushNamed(context, PixHomeScreen.routeName)),
-            _drawerItem(context, Icons.key_outlined, 'Minhas chaves',
-                () => Navigator.pushNamed(context, PixManageKeysScreen.routeName)),
-            _drawerItem(context, Icons.shopping_bag_outlined, 'Vendas',
-                () => Navigator.pushNamed(context, SalesScreen.routeName)),
-            _drawerItem(context, Icons.support_agent_outlined, 'Suporte',
-                () => Navigator.pushNamed(context, SupportLoginScreen.routeName)),
+            _drawerItem(context, Icons.person_outlined, 'Perfil', () {
+              Navigator.of(context).pop();
+              Navigator.pushNamed(context, SettingsScreen.routeName);
+            }),
+            _drawerItem(context, Icons.settings_outlined, 'Configurações',
+                () {
+              Navigator.of(context).pop();
+              Navigator.pushNamed(context, SettingsScreen.routeName);
+            }),
             const Spacer(),
             const Divider(color: AppColors.borderDefault, height: 1),
             _drawerItem(context, Icons.logout_outlined, 'Sair', () async {
@@ -174,7 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: const Icon(Icons.menu, size: 24, color: AppColors.textPrimary),
           ),
           _tapBox(
-            onTap: () => _soon(context),
+            onTap: () => Navigator.pushNamed(context, NotificationsScreen.routeName),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -280,21 +279,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text('Saldo em conta',
                     style: _inter(14, FontWeight.w500, AppColors.textSecondary)),
-                GestureDetector(
-                  onTap: () => setState(() => _balanceVisible = !_balanceVisible),
-                  child: Icon(
-                    _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                    size: 24,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                Text('Oculto',
+                    style: _inter(12, FontWeight.w500, AppColors.textTertiary)),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Text(
-                  _balanceVisible ? 'R\$ ••••••' : 'R\$ ••••••',
+                  'R\$ ••••••',
                   style: _inter(40, FontWeight.w700, AppColors.textPrimary, height: 1.1),
                 ),
                 const SizedBox(width: 12),
@@ -554,9 +547,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildBottomNav(BuildContext context) {
     const items = [
       (Icons.home_outlined, 'Início'),
-      (Icons.account_balance_wallet_outlined, 'Carteira'),
-      (Icons.shopping_bag_outlined, 'Vendas'),
       (Icons.receipt_long_outlined, 'Histórico'),
+      (Icons.storefront_outlined, 'Comércio'),
+      (Icons.account_balance_wallet_outlined, 'Carteira'),
     ];
     return Container(
       decoration: const BoxDecoration(
@@ -576,11 +569,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () {
                   if (i == 0) return;
                   if (i == 1) {
-                    Navigator.pushNamed(context, WalletScreen.routeName);
-                  } else if (i == 2) {
-                    Navigator.pushNamed(context, SalesScreen.routeName);
-                  } else {
                     Navigator.pushNamed(context, StatementScreen.routeName);
+                  } else if (i == 2) {
+                    Navigator.pushNamed(context, CommerceIntroScreen.routeName);
+                  } else {
+                    Navigator.pushNamed(context, WalletScreen.routeName);
                   }
                 },
                 child: Container(

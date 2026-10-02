@@ -10,6 +10,8 @@ import 'package:estrutura_front_san1ty/screens/statement_screen.dart';
 import 'package:estrutura_front_san1ty/screens/wallet_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_manage_keys_screen.dart';
+import 'package:estrutura_front_san1ty/screens/settings_screen.dart';
+import 'package:estrutura_front_san1ty/screens/notifications_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_pay_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_value_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_success_screen.dart';
@@ -47,6 +49,8 @@ class MyApp extends StatelessWidget {
     WalletScreen.routeName: (_) => const WalletScreen(),
     PixHomeScreen.routeName: (_) => const PixHomeScreen(),
     PixManageKeysScreen.routeName: (_) => const PixManageKeysScreen(),
+    SettingsScreen.routeName: (_) => const SettingsScreen(),
+    NotificationsScreen.routeName: (_) => const NotificationsScreen(),
     PixPayScreen.routeName: (_) => const PixPayScreen(),
     PixValueScreen.routeName: (context) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
