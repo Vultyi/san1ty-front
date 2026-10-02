@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
+import 'package:estrutura_front_san1ty/screens/login_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
+import 'package:estrutura_front_san1ty/screens/pix_manage_keys_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_pay_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/screens/statement_screen.dart';
+import 'package:estrutura_front_san1ty/screens/support_login_screen.dart';
 import 'package:estrutura_front_san1ty/screens/wallet_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
@@ -52,12 +55,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
+      drawer: _buildDrawer(context),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           children: [
             const SizedBox(height: 12),
-            _buildHeader(context),
+            Builder(builder: (ctx) => _buildHeader(ctx)),
             const SizedBox(height: 20),
             _buildUserArea(),
             const SizedBox(height: 20),
@@ -80,6 +84,84 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Drawer lateral com destinos reais + sair.
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: AppColors.backgroundSecondary,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      color: AppColors.actionPrimary,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _userName.isNotEmpty ? _userName[0].toUpperCase() : '?',
+                      style: _inter(18, FontWeight.w700, Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Olá, $_userName',
+                            style: _inter(17, FontWeight.w600, AppColors.textPrimary)),
+                        Text('Conta San1tyPay',
+                            style: _inter(13, FontWeight.w400, AppColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: AppColors.borderDefault, height: 1),
+            _drawerItem(context, Icons.account_balance_wallet_outlined, 'Carteira',
+                () => Navigator.pushNamed(context, WalletScreen.routeName)),
+            _drawerItem(context, Icons.pix_outlined, 'PIX',
+                () => Navigator.pushNamed(context, PixHomeScreen.routeName)),
+            _drawerItem(context, Icons.key_outlined, 'Minhas chaves',
+                () => Navigator.pushNamed(context, PixManageKeysScreen.routeName)),
+            _drawerItem(context, Icons.shopping_bag_outlined, 'Vendas',
+                () => Navigator.pushNamed(context, SalesScreen.routeName)),
+            _drawerItem(context, Icons.support_agent_outlined, 'Suporte',
+                () => Navigator.pushNamed(context, SupportLoginScreen.routeName)),
+            const Spacer(),
+            const Divider(color: AppColors.borderDefault, height: 1),
+            _drawerItem(context, Icons.logout_outlined, 'Sair', () async {
+              Navigator.of(context).pop();
+              await AuthService().logout();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, LoginScreen.routeName, (_) => false);
+              }
+            }, danger: true),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerItem(BuildContext context, IconData icon, String label, VoidCallback onTap,
+      {bool danger = false}) {
+    final color = danger ? AppColors.errorRed : AppColors.textPrimary;
+    return ListTile(
+      leading: Icon(icon, size: 24, color: danger ? color : AppColors.textSecondary),
+      title: Text(label, style: _inter(15, FontWeight.w500, color)),
+      onTap: onTap,
+    );
+  }
+
   // Header ~120px: menu 44px esq, sino 44px dir com ponto.
   Widget _buildHeader(BuildContext context) {
     return SizedBox(
@@ -88,7 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _tapBox(
-            onTap: () => _soon(context),
+            onTap: () => Scaffold.of(context).openDrawer(),
             child: const Icon(Icons.menu, size: 24, color: AppColors.textPrimary),
           ),
           _tapBox(
