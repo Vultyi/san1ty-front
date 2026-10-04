@@ -16,10 +16,15 @@ class UpdateInfo {
   final String apkUrl;
   final String tag;
 
+  /// SHA-256 hex do APK (asset `app-release.apk.sha256`). Obrigatório:
+  /// sem hash não instala (fail-closed contra binário trocado).
+  final String sha256;
+
   const UpdateInfo({
     required this.latestBuild,
     required this.apkUrl,
     required this.tag,
+    required this.sha256,
   });
 }
 
@@ -52,15 +57,21 @@ class UpdateService {
       final apkUrl = _apkUrlFromAssets(json['assets']);
       if (apkUrl == null) return null;
 
-      return UpdateInfo(latestBuild: latestBuild, apkUrl: apkUrl, tag: tag);
+      // SHA-256 publicado como asset irmão `<apk>.sha256` (primeiro token).
+      // Ausente ou malformado = release antiga/incompleta: não instala.
+      final sha256 = await _sha256FromAssets(json['assets'], apkUrl);
+      if (sha256 == null) return null;
+
+      return UpdateInfo(
+          latestBuild: latestBuild, apkUrl: apkUrl, tag: tag, sha256: sha256);
     } catch (_) {
       return null;
     }
   }
 
-  /// Baixa e instala. Emite progresso 0-100 via [onProgress].
-  /// Erros de download/instalação são reportados via evento, sem throw
-  /// para o fluxo normal (só relança erro interno inesperado).
+  /// Baixa e instala com verificação de hash no nativo. Emite progresso
+  /// 0-100 via [onProgress]. Erros de download/instalação (incluindo
+  /// checksum divergente) são reportados via evento, sem throw.
   Stream<OtaEvent> downloadAndInstall(
     UpdateInfo info, {
     String destinationFilename = 'san1ty-update.apk',
@@ -68,7 +79,35 @@ class UpdateService {
     return OtaUpdate().execute(
       info.apkUrl,
       destinationFilename: destinationFilename,
+      sha256checksum: info.sha256,
     );
+  }
+
+  /// Localiza o asset `<nome-do-apk>.sha256` e valida o formato hex64.
+  static Future<String?> _sha256FromAssets(
+      dynamic assets, String apkUrl) async {
+    if (assets is! List) return null;
+    final apkName = apkUrl.split('/').last;
+    String? shaUrl;
+    for (final a in assets) {
+      if (a is! Map<String, dynamic>) continue;
+      if ((a['name'] as String? ?? '') == '$apkName.sha256') {
+        shaUrl = a['browser_download_url'] as String?;
+        break;
+      }
+    }
+    if (shaUrl == null || shaUrl.isEmpty) return null;
+    try {
+      final res = await http
+          .get(Uri.parse(shaUrl), headers: {'Accept': 'text/plain'})
+          .timeout(_timeout);
+      if (res.statusCode != 200) return null;
+      final hash = res.body.trim().split(RegExp(r'\s+')).first.toLowerCase();
+      if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(hash)) return null;
+      return hash;
+    } catch (_) {
+      return null;
+    }
   }
 
   static int? _buildFromTag(String tag) {

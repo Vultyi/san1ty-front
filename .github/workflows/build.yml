@@ -55,9 +55,18 @@ jobs:
       - name: Build APK release
         run: flutter build apk --release --dart-define=API_BASE_URL=https://structure-s1z.onrender.com --build-number=${{ github.run_number }}
 
+      - name: Gerar SHA-256 do APK (OTA verifica antes de instalar)
+        run: |
+          set -euo pipefail
+          cd build/app/outputs/flutter-apk
+          sha256sum app-release.apk | awk '{print $1}' > app-release.apk.sha256
+          cat app-release.apk.sha256
+
       - name: Publish Release build-${{ github.run_number }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: build-${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-release.apk.sha256
