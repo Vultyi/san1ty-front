@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- San1tyPay: TLS reforçado (LGPD art. 46).
+     - cleartext proibido globalmente.
+     - Pinning SPKI nos hosts da API: intermediária WE1 (primário) +
+       raiz GTS Root R4 (backup). O leaf do Render roda ~90 dias e NÃO
+       é pinado de propósito.
+     - expiration exige revisão dos pins antes de 2027-06-01 (se o app
+       passar a recusar TLS após essa data, atualizar os pins).
+     - debug-overrides: Burp/Charles só em build debug. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">structure-s1z.onrender.com</domain>
+        <domain includeSubdomains="true">api.san1typay.com</domain>
+        <pin-set expiration="2027-06-01">
+            <pin digest="SHA-256">8emdl/UmneUm0I4Y/vHzOTQzb9eJwG4voRHtMdNmBPk=</pin>
+            <pin digest="SHA-256">kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</pin>
+        </pin-set>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

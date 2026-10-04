@@ -1,4 +1,5 @@
 // lib/core/security/api_security_service.dart
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'secure_storage_service.dart';
@@ -38,9 +39,16 @@ class ApiSecurityService {
     };
   }
 
-  /// Gera um ID único para cada requisição (para tracking de segurança)
+  /// ID único por requisição (UUIDv4 via CSPRNG; rastreio + idempotência).
   String _generateRequestId() {
-    return DateTime.now().millisecondsSinceEpoch.toString();
+    final rnd = Random.secure();
+    final bytes = List<int>.generate(16, (_) => rnd.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0F) | 0x40; // versão 4
+    bytes[8] = (bytes[8] & 0x3F) | 0x80; // variante RFC 4122
+    final hex =
+        bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
   }
 
   /// GET seguro
