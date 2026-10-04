@@ -54,3 +54,4 @@ android/key.properties
 # Logs locais de build
 build_log.txt
 build_apk.log
+android/build/
