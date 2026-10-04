@@ -19,6 +19,7 @@ import 'package:estrutura_front_san1ty/screens/pix_register_key_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_confirm_email_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_confirm_phone_screen.dart';
 import 'package:estrutura_front_san1ty/screens/login_screen.dart';
+import 'package:estrutura_front_san1ty/screens/extra_screens.dart';
 import 'package:estrutura_front_san1ty/screens/splash_screen.dart';
 import 'package:estrutura_front_san1ty/screens/support_login_screen.dart';
 import 'package:estrutura_front_san1ty/screens/support_dashboard_screen.dart';
@@ -120,7 +121,7 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const SplashScreen(),
+      home: const SplashPage(),
       routes: routes,
     );
   }
