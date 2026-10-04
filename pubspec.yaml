@@ -49,8 +49,6 @@ dependencies:
   
   # Segurança de dispositivo (LGPD art. 46)
   local_auth: ^2.3.0
-  flutter_windowmanager: ^0.2.0
-  flutter_jailbreak_detection: ^1.10.0
 
   # Data formatting and masking
   mask_text_input_formatter: ^2.9.0

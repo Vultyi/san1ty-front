@@ -1,8 +1,10 @@
 // lib/core/security/device_security_service.dart
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:local_auth/local_auth.dart';
+// REMOVIDO TEMPORÁRIO (build): flutter_jailbreak_detection 1.10.0 e
+// flutter_windowmanager 0.2.0 não declaram `namespace` e quebram o AGP 8+.
+// Reativar via fork com namespace antes de vender. Até lá: sem root-block
+// e sem FLAG_SECURE (fail-open documentado, só em dev/teste).
 import 'package:local_auth/local_auth.dart';
 
 /// Segurança do dispositivo (LGPD art. 46 — barreiras no endpoint).
@@ -24,25 +26,12 @@ class DeviceSecurityService {
       bool.fromEnvironment('ALLOW_ROOTED', defaultValue: false);
 
   /// true = dispositivo íntegro (ou bypass de dev). false = bloquear.
+  /// TEMPORÁRIO: plugin de root removido (sem namespace) — sempre true até
+  /// o fork. Não usar como garantia em produção.
   Future<bool> checkDeviceIntegrity() async {
     if (_allowRooted) return true;
-    try {
-      final jailbroken = await FlutterJailbreakDetection.jailbroken;
-      if (jailbroken) return false;
-      // Modo desenvolvedor sozinho não bloqueia (comum em dev), só registra.
-      assert(() {
-        FlutterJailbreakDetection.developerMode.then((v) {
-          if (v) debugPrint('device: developerMode ativo (permitido)');
-        });
-        return true;
-      }());
-      return true;
-    } on PlatformException {
-      // Plugin indisponível (desktop/teste): não bloqueia fora do mobile.
-      return true;
-    } catch (_) {
-      return false;
-    }
+    debugPrint('device: root-check desativado (plugin sem namespace) — fail-open temporário');
+    return true;
   }
 
   /// Biometria disponível e com credencial cadastrada?
@@ -71,16 +60,11 @@ class DeviceSecurityService {
   }
 
   /// Liga anti-screenshot (chamar no initState de telas sensíveis).
+  /// TEMPORÁRIO: sem plugin (sem namespace) — no-op até o fork.
   Future<void> secureScreenOn() async {
-    try {
-      await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-    } catch (_) {}
+    debugPrint('device: FLAG_SECURE desativado (plugin sem namespace)');
   }
 
   /// Desliga (chamar no dispose).
-  Future<void> secureScreenOff() async {
-    try {
-      await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
-    } catch (_) {}
-  }
+  Future<void> secureScreenOff() async {}
 }
