@@ -5,13 +5,17 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 import 'package:estrutura_front_san1ty/screens/extra_screens.dart';
 import 'package:estrutura_front_san1ty/screens/login_screen.dart';
 import 'package:estrutura_front_san1ty/screens/notifications_screen.dart';
+import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
 class AppShell extends StatefulWidget {
+  static const String routeName = '/shell';
+
   const AppShell({super.key});
   @override
   State<AppShell> createState() => _AppShellState();
@@ -27,12 +31,15 @@ class _AppShellState extends State<AppShell> {
     final pages = [
       HomePage(onTab: (i) => setState(() => tab = i)),
       const ExtratoPage(),
-      const Soon('Comércio'), // você monta aqui
+      const CommerceIntroScreen(),
       const CarteiraPage(),
     ];
     return Scaffold(
       drawer: const MenuDrawer(),
-      body: IndexedStack(index: tab, children: pages),
+      body: PopScope(
+        canPop: tab != 2,
+        child: IndexedStack(index: tab, children: pages),
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(color: Color(0xF203050F), border: Border(top: BorderSide(color: line))),
         padding: EdgeInsets.only(top: 10, bottom: MediaQuery.of(context).padding.bottom + 10),
@@ -254,8 +261,11 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 16),
         Row(children: [
-          tile(Icons.pix, 'Pix', 'Transferir e pagar', first: true, tap: () => widget.onTab(3)),
-          tile(Icons.shopping_bag_outlined, 'Vendas', 'Seu faturamento', tap: () => widget.onTab(2)),
+          tile(Icons.pix, 'Pix', 'Transferir e pagar',
+              first: true,
+              tap: () => Navigator.pushNamed(context, PixHomeScreen.routeName)),
+          tile(Icons.shopping_bag_outlined, 'Vendas', 'Seu faturamento',
+              tap: () => Navigator.pushNamed(context, SalesScreen.routeName)),
           tile(Icons.request_page_outlined, 'Pagar conta', 'Boletos e serviços', tap: () {}),
           tile(Icons.close_rounded, 'Em breve', 'Novidades', off: true),
         ]),

@@ -10,6 +10,8 @@ import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 
 // Ciclo home_shell <-> extra_screens permitido: só referências de classes.
 import 'package:estrutura_front_san1ty/screens/home_shell.dart';
+import 'package:estrutura_front_san1ty/screens/login_screen.dart';
+import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
 const appName = 'San1ty'; // nome mostrado na abertura
 const outC = Color(0xFFFF9393);
@@ -358,13 +360,16 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 2800), () {
+    Future.delayed(const Duration(milliseconds: 2800), () async {
+      if (!mounted) return;
+      final logged = await AuthService().isLoggedIn();
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) => const AppShell(),
+          pageBuilder: (_, __, ___) =>
+              logged ? const AppShell() : const LoginScreen(),
           transitionsBuilder: (_, a, __, child) => FadeTransition(opacity: a, child: child),
         ),
       );

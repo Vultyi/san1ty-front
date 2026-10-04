@@ -5,7 +5,7 @@ import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 import 'package:estrutura_front_san1ty/core/security/device_security_service.dart';
 import 'package:estrutura_front_san1ty/core/security/secure_storage_service.dart';
-import 'package:estrutura_front_san1ty/screens/dashboard_screen.dart';
+import 'package:estrutura_front_san1ty/screens/home_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = '/login';
@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       if (response['success'] == true) {
-        Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
+        Navigator.pushReplacementNamed(context, AppShell.routeName);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response['success'] == true) {
         // Login bem-sucedido - navegar para o dashboard
-        Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
+        Navigator.pushReplacementNamed(context, AppShell.routeName);
       } else {
         // Mostrar erro
         ScaffoldMessenger.of(context).showSnackBar(
