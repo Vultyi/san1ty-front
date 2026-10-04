@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
+import 'package:estrutura_front_san1ty/screens/auth_screens.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_list_screen.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_onboarding_screen.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_plan_screen.dart';
@@ -54,6 +55,7 @@ class MyApp extends StatelessWidget {
     PixManageKeysScreen.routeName: (_) => const PixManageKeysScreen(),
     SettingsScreen.routeName: (_) => const SettingsScreen(),
     NotificationsScreen.routeName: (_) => const NotificationsScreen(),
+    LoginPage.routeName: (_) => const LoginPage(),
     PixPayScreen.routeName: (_) => const PixPayScreen(),
     PixValueScreen.routeName: (context) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;

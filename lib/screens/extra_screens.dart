@@ -9,8 +9,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 
 // Ciclo home_shell <-> extra_screens permitido: só referências de classes.
+import 'package:estrutura_front_san1ty/screens/auth_screens.dart';
 import 'package:estrutura_front_san1ty/screens/home_shell.dart';
-import 'package:estrutura_front_san1ty/screens/login_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
 const appName = 'San1ty'; // nome mostrado na abertura
@@ -369,7 +369,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
           pageBuilder: (_, __, ___) =>
-              logged ? const AppShell() : const LoginScreen(),
+              logged ? const AppShell() : const LoginPage(),
           transitionsBuilder: (_, a, __, child) => FadeTransition(opacity: a, child: child),
         ),
       );

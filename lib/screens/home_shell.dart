@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 import 'package:estrutura_front_san1ty/screens/extra_screens.dart';
-import 'package:estrutura_front_san1ty/screens/login_screen.dart';
+import 'package:estrutura_front_san1ty/screens/auth_screens.dart';
 import 'package:estrutura_front_san1ty/screens/notifications_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
@@ -359,7 +359,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
     nav.pop();
     await AuthService().logout();
     if (!ctx.mounted) return;
-    nav.pushNamedAndRemoveUntil(LoginScreen.routeName, (_) => false);
+    nav.pushNamedAndRemoveUntil(LoginPage.routeName, (_) => false);
   }
 
   @override
