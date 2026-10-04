@@ -1,4 +1,5 @@
 // lib/core/security/device_security_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
@@ -28,8 +29,13 @@ class DeviceSecurityService {
     try {
       final jailbroken = await FlutterJailbreakDetection.jailbroken;
       if (jailbroken) return false;
-      final devMode = await FlutterJailbreakDetection.developerMode;
       // Modo desenvolvedor sozinho não bloqueia (comum em dev), só registra.
+      assert(() {
+        FlutterJailbreakDetection.developerMode.then((v) {
+          if (v) debugPrint('device: developerMode ativo (permitido)');
+        });
+        return true;
+      }());
       return true;
     } on PlatformException {
       // Plugin indisponível (desktop/teste): não bloqueia fora do mobile.
