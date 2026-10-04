@@ -3,6 +3,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
+import 'package:estrutura_front_san1ty/core/security/device_security_service.dart';
+import 'package:estrutura_front_san1ty/core/security/secure_storage_service.dart';
 import 'package:estrutura_front_san1ty/screens/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,8 +22,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _authService = AuthService();
+  final _deviceSecurity = DeviceSecurityService();
+  final _secureStorage = SecureStorageService();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _biometricLoading = false;
+  bool _canUseBiometrics = false;
+  bool _hasRefreshToken = false;
   String _versionLabel = '';
 
   @override
@@ -35,6 +42,44 @@ class _LoginScreenState extends State<LoginScreen> {
         _versionLabel = 'v${info.version} (build ${info.buildNumber})';
       });
     });
+    _checkBiometricAvailability();
+  }
+
+  /// Biometria só aparece se o aparelho suporta E há refresh guardado.
+  Future<void> _checkBiometricAvailability() async {
+    final canBio = await _deviceSecurity.canUseBiometrics();
+    final refresh = await _secureStorage.getRefreshToken();
+    if (!mounted) return;
+    setState(() {
+      _canUseBiometrics = canBio;
+      _hasRefreshToken = refresh != null && refresh.isNotEmpty;
+    });
+  }
+
+  Future<void> _onBiometricLoginPressed() async {
+    if (_biometricLoading) return;
+    setState(() => _biometricLoading = true);
+    try {
+      final response = await _authService.loginWithBiometrics(
+        () => _deviceSecurity.authenticate(
+          reason: 'Confirme sua identidade para entrar no San1tyPay',
+        ),
+      );
+      if (!mounted) return;
+      if (response['success'] == true) {
+        Navigator.pushReplacementNamed(context, DashboardScreen.routeName);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['error'] ?? 'Biometria falhou'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _biometricLoading = false);
+    }
   }
 
   @override
@@ -289,6 +334,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: Dimensions.space24),
               _buildPrimaryButton(),
+              if (_canUseBiometrics && _hasRefreshToken) ...[
+                const SizedBox(height: Dimensions.space16),
+                _buildBiometricButton(),
+              ],
               const SizedBox(height: Dimensions.space24),
               _buildOrDivider(),
               const SizedBox(height: Dimensions.space24),
@@ -376,6 +425,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               )
             : const Text('Entrar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5)),
+      ),
+    );
+  }
+
+  Widget _buildBiometricButton() {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: _biometricLoading ? null : _onBiometricLoginPressed,
+        icon: _biometricLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.fingerprint, size: 22),
+        label: const Text(
+          'Entrar com biometria',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5),
+        ),
+        style: OutlinedButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:estrutura_front_san1ty/core/security/device_security_service.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/screens/pix_register_key_screen.dart';
@@ -59,6 +60,7 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
   @override
   void initState() {
     super.initState();
+    DeviceSecurityService().secureScreenOn();
     _loadKeys();
   }
 
@@ -113,6 +115,12 @@ class _PixManageKeysScreenState extends State<PixManageKeysScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Chave copiada para o clipboard')), 
     );
+  }
+
+  @override
+  void dispose() {
+    DeviceSecurityService().secureScreenOff();
+    super.dispose();
   }
 
   @override

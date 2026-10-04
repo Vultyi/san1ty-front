@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/constants/text_styles.dart';
+import 'package:estrutura_front_san1ty/core/security/device_security_service.dart';
 
 class WalletScreen extends StatefulWidget {
   static const String routeName = '/wallet';
@@ -21,6 +22,7 @@ class _WalletScreenState extends State<WalletScreen>
   @override
   void initState() {
     super.initState();
+    DeviceSecurityService().secureScreenOn();
     _balanceAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -35,6 +37,7 @@ class _WalletScreenState extends State<WalletScreen>
 
   @override
   void dispose() {
+    DeviceSecurityService().secureScreenOff();
     _balanceAnimationController.dispose();
     super.dispose();
   }

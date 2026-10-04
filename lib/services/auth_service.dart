@@ -62,6 +62,57 @@ class AuthService {
     await _storageService.clearAll();
   }
 
+  /// Reentrada com biometria: exige biometric + troca o refresh guardado
+  /// por um par novo (`POST /api/auth/refresh?refresh_token=`).
+  /// O refresh antigo é revogado no servidor (rotation).
+  Future<Map<String, dynamic>> loginWithBiometrics(
+    Future<bool> Function() authenticate,
+  ) async {
+    try {
+      final ok = await authenticate();
+      if (!ok) {
+        return {'success': false, 'error': 'Biometria não confirmada.'};
+      }
+      final refreshToken = await _storageService.getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) {
+        return {'success': false, 'error': 'Sessão expirada. Faça login.'};
+      }
+      final response = await _apiService.post(
+        '/api/auth/refresh?refresh_token=$refreshToken',
+        body: <String, dynamic>{},
+      );
+      final accessToken = response['access_token'] as String?;
+      if (accessToken == null || accessToken.isEmpty) {
+        await _storageService.clearAll();
+        return {
+          'success': false,
+          'error': response['error'] ?? 'Sessão expirada. Faça login.',
+        };
+      }
+      await _storageService.saveAuthToken(accessToken);
+      final newRefresh = response['refresh_token'] as String?;
+      if (newRefresh != null) {
+        await _storageService.saveRefreshToken(newRefresh);
+      }
+      final me = await _apiService.get('/api/auth/me');
+      final user = (me['email'] != null) ? me : <String, dynamic>{};
+      await _storageService.saveUserData(jsonEncode(user));
+      return {
+        'success': true,
+        'data': {
+          'accessToken': accessToken,
+          'refreshToken': newRefresh,
+          'user': user,
+        },
+      };
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'Erro de conexão. Verifique sua internet e tente novamente.',
+      };
+    }
+  }
+
   /// Returns true when a non-empty access token is present in local storage.
   ///
   /// Does not validate the token against the server — use this only for

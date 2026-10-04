@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/screens/pix_manage_keys_screen.dart';
+import 'package:estrutura_front_san1ty/core/security/device_security_service.dart';
 import 'package:estrutura_front_san1ty/screens/pix_pay_screen.dart';
 
 class PixHomeScreen extends StatefulWidget {
@@ -28,7 +29,14 @@ class _PixHomeScreenState extends State<PixHomeScreen> {
   static const String _pixCnpj = '12.345.678/0001-99';
 
   @override
+  void initState() {
+    super.initState();
+    DeviceSecurityService().secureScreenOn();
+  }
+
+  @override
   void dispose() {
+    DeviceSecurityService().secureScreenOff();
     _amountController.dispose();
     _valueFocusNode.dispose();
     _feedbackTimer?.cancel();

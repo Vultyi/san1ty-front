@@ -6,6 +6,7 @@ import 'package:estrutura_front_san1ty/constants/colors.dart';
 import 'package:estrutura_front_san1ty/constants/dimensions.dart';
 import 'package:estrutura_front_san1ty/constants/text_styles.dart';
 import 'package:estrutura_front_san1ty/core/update/update_service.dart';
+import 'package:estrutura_front_san1ty/core/security/device_security_service.dart';
 import 'package:estrutura_front_san1ty/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -28,6 +29,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _boot() async {
+    // Integridade primeiro: root/jailbreak não entra (fail-closed).
+    final deviceSecurity = DeviceSecurityService();
+    final integrityOk = await deviceSecurity.checkDeviceIntegrity();
+    if (!mounted || _navigated) return;
+    if (!integrityOk) {
+      _showBlockedDialog();
+      return;
+    }
     // Tempo mínimo de splash + checagem de update em paralelo.
     // Falhas de rede/API resultam em null e seguem para o login.
     final results = await Future.wait([
@@ -55,6 +64,24 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted || _navigated) return;
     _navigated = true;
     Navigator.pushReplacementNamed(context, LoginScreen.routeName);
+  }
+
+  /// Bloqueio por dispositivo comprometido: sem botão de continuar.
+  void _showBlockedDialog() {
+    if (!mounted || _navigated) return;
+    _navigated = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Dispositivo não seguro'),
+        content: const Text(
+          'Este aparelho tem root/jailbreak ativo. Por segurança, '
+          'o San1tyPay não pode ser usado aqui.',
+        ),
+        actions: const [],
+      ),
+    );
   }
 
   Future<bool?> _askUpdate(UpdateInfo info) {
