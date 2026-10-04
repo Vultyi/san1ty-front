@@ -9,51 +9,6 @@ import 'package:estrutura_front_san1ty/screens/extra_screens.dart' show appName,
 import 'package:estrutura_front_san1ty/screens/home_shell.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 
-// ---------------- LOGO ----------------
-class SanLogo extends StatelessWidget {
-  final double size;
-  const SanLogo({super.key, this.size = 34});
-  @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
-        CustomPaint(size: Size(size, size), painter: _Mark()),
-        SizedBox(width: size * .3),
-        Text.rich(const TextSpan(children: [TextSpan(text: 'San'), TextSpan(text: '1', style: TextStyle(color: sky)), TextSpan(text: 'ty')]), style: disp(size * .9)),
-      ]);
-}
-
-class _Mark extends CustomPainter {
-  @override
-  void paint(Canvas c, Size s) {
-    final w = s.width, h = s.height;
-    final shield = Path()
-      ..moveTo(w * .5, h * .04)
-      ..lineTo(w * .9, h * .18)
-      ..lineTo(w * .9, h * .52)
-      ..cubicTo(w * .9, h * .78, w * .7, h * .92, w * .5, h * .98)
-      ..cubicTo(w * .3, h * .92, w * .1, h * .78, w * .1, h * .52)
-      ..lineTo(w * .1, h * .18)
-      ..close();
-    c.drawPath(
-        shield,
-        Paint()
-          ..shader = const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF6C92FF), Color(0xFF2336D9)]).createShader(Offset.zero & s));
-    c.drawPath(
-        Path()
-          ..moveTo(w * .36, h * .40)
-          ..lineTo(w * .53, h * .29)
-          ..lineTo(w * .53, h * .70),
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = w * .11
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round);
-  }
-
-  @override
-  bool shouldRepaint(_Mark o) => false;
-}
-
 // ---------------- COMPONENTES ----------------
 class AuthField extends StatefulWidget {
   final String label, hint;
@@ -117,6 +72,20 @@ class Ghost extends StatelessWidget {
 
 bool okMail(String s) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s.trim());
 
+// Wordmark textual San1ty (sem símbolo).
+class _San1tyWordmark extends StatelessWidget {
+  const _San1tyWordmark();
+  @override
+  Widget build(BuildContext context) => Text.rich(
+        const TextSpan(children: [
+          TextSpan(text: 'San', style: TextStyle(color: Colors.white)),
+          TextSpan(text: '1', style: TextStyle(color: sky)),
+          TextSpan(text: 'ty', style: TextStyle(color: Colors.white)),
+        ]),
+        style: disp(30),
+      );
+}
+
 // ---------------- LOGIN ----------------
 class LoginPage extends StatefulWidget {
   static const String routeName = '/auth/login';
@@ -155,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const SanLogo(),
+              const _San1tyWordmark(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: line)), // TODO: seletor de idioma
@@ -164,24 +133,45 @@ class _LoginPageState extends State<LoginPage> {
             ]),
           ),
           Expanded(
-            child: ListView(padding: const EdgeInsets.fromLTRB(22, 70, 22, 24), children: [
-              Text('Acessar conta', style: disp(34)),
-              const SizedBox(height: 8),
-              Text('Bom te ver de novo.', style: body(15, c: mu)),
-              const SizedBox(height: 34),
-              AuthField('E-mail ou CPF', id, 'exemplo@email.com', type: TextInputType.emailAddress, onChanged: (_) => setState(() {})),
-              AuthField('Senha', pw, '••••••••', secret: true, onChanged: (_) => setState(() {})),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPage())), child: Text('Esqueci minha senha', style: body(14, c: sky, w: FontWeight.w600))),
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Acessar conta', style: disp(34)),
+                    const SizedBox(height: 8),
+                    Text('Bom te ver de novo.', style: body(15, c: mu)),
+                    const SizedBox(height: 34),
+                    AuthField('E-mail ou CPF', id, 'exemplo@email.com',
+                        type: TextInputType.emailAddress, onChanged: (_) => setState(() {})),
+                    AuthField('Senha', pw, '••••••••', secret: true, onChanged: (_) => setState(() {})),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                          onTap: () => Navigator.push(
+                              context, MaterialPageRoute(builder: (_) => const ForgotPage())),
+                          child: Text('Esqueci minha senha',
+                              style: body(14, c: sky, w: FontWeight.w600))),
+                    ),
+                    const SizedBox(height: 28),
+                    Cta('Entrar', valid ? enter : null),
+                    const SizedBox(height: 22),
+                    Row(children: [
+                      const Expanded(child: Divider(color: line)),
+                      Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Text('ou', style: body(14, c: mu))),
+                      const Expanded(child: Divider(color: line))
+                    ]),
+                    const SizedBox(height: 22),
+                    Ghost('Criar nova conta',
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()))),
+                  ],
+                ),
               ),
-              const SizedBox(height: 28),
-              Cta('Entrar', valid ? enter : null),
-              const SizedBox(height: 22),
-              Row(children: [const Expanded(child: Divider(color: line)), Padding(padding: const EdgeInsets.symmetric(horizontal: 14), child: Text('ou', style: body(14, c: mu))), const Expanded(child: Divider(color: line))]),
-              const SizedBox(height: 22),
-              Ghost('Criar nova conta', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()))),
-            ]),
+            ),
           ),
           Container(
             width: double.infinity,
