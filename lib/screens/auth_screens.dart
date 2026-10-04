@@ -451,7 +451,7 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
       );
 }
 
-// ---------------- RECUPERAR SENHA ----------------
+// ---------------- RECUPERAR SENHA (tela única, código expande abaixo) ----------------
 class ForgotPage extends StatefulWidget {
   const ForgotPage({super.key});
   @override
@@ -461,9 +461,10 @@ class ForgotPage extends StatefulWidget {
 class _ForgotPageState extends State<ForgotPage> {
   final mail = TextEditingController(), code = TextEditingController(), a = TextEditingController(), b = TextEditingController();
   final _auth = AuthService();
-  int step = 1, secs = 0;
+  bool _sent = false, _verified = false, _done = false;
   bool _busy = false;
   String? _error;
+  int _secs = 0;
   Timer? t;
 
   @override
@@ -475,12 +476,12 @@ class _ForgotPageState extends State<ForgotPage> {
     super.dispose();
   }
 
-  void startTimer() {
+  void _startTimer() {
     t?.cancel();
-    setState(() => secs = 30);
+    setState(() => _secs = 30);
     t = Timer.periodic(const Duration(seconds: 1), (k) {
-      if (secs <= 1) k.cancel();
-      setState(() => secs--);
+      if (_secs <= 1) k.cancel();
+      if (mounted) setState(() => _secs--);
     });
   }
 
@@ -494,16 +495,16 @@ class _ForgotPageState extends State<ForgotPage> {
     if (!mounted) return;
     setState(() {
       _busy = false;
-      step = 2;
+      _sent = true;
     });
-    startTimer();
+    _startTimer();
   }
 
   Future<void> _resendCode() async {
     if (_busy) return;
     await _auth.sendEmailCode(mail.text.trim());
     if (!mounted) return;
-    startTimer();
+    _startTimer();
   }
 
   Future<void> _goReset() async {
@@ -516,7 +517,7 @@ class _ForgotPageState extends State<ForgotPage> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (res['success'] == true) {
-      setState(() => step = 3);
+      setState(() => _verified = true);
     } else {
       setState(() => _error = res['error']?.toString() ?? 'Código inválido ou expirado.');
     }
@@ -532,7 +533,7 @@ class _ForgotPageState extends State<ForgotPage> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (res['success'] == true) {
-      setState(() => step = 4);
+      setState(() => _done = true);
     } else {
       setState(() => _error = res['error']?.toString() ?? 'Não foi possível redefinir.');
     }
@@ -547,25 +548,6 @@ class _ForgotPageState extends State<ForgotPage> {
         const SizedBox(height: 30),
       ]);
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Shell(Padding(
-          padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (step < 4)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 26),
-                child: Row(children: [
-                  GestureDetector(onTap: () => step > 1 ? setState(() => step--) : Navigator.pop(context), child: const Icon(Icons.arrow_back_rounded, color: sky)),
-                  const Spacer(),
-                  for (var i = 1; i <= 3; i++) Container(margin: const EdgeInsets.only(left: 6), width: 22, height: 4, decoration: BoxDecoration(color: i <= step ? Colors.white : line, borderRadius: BorderRadius.circular(4))),
-                ]),
-              ),
-            Expanded(child: [one, two, three, four][step - 1]()),
-          ]),
-        )),
-      );
-
   Widget _errorLine() => _error == null
       ? const SizedBox.shrink()
       : Padding(
@@ -573,63 +555,102 @@ class _ForgotPageState extends State<ForgotPage> {
           child: Text(_error!, style: body(14, c: outC)),
         );
 
-  Widget one() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        titleBlock('Esqueceu sua senha?', 'Digite o e-mail da sua conta. Se ele estiver cadastrado, enviamos um código de 6 dígitos.'),
-        AuthField('E-mail', mail, 'exemplo@email.com', type: TextInputType.emailAddress, onChanged: rebuild),
-        const Spacer(),
-        _errorLine(),
-        Cta(_busy ? 'Enviando...' : 'Enviar código',
-            okMail(mail.text) && !_busy ? _sendCode : null),
-      ]);
-
-  Widget two() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        titleBlock('Confira seu e-mail', 'Enviamos um código para ${mail.text.trim()}. Ele vale por alguns minutos.'),
-        TextField(
-          controller: code,
-          onChanged: rebuild,
-          maxLength: 6,
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          cursorColor: sky,
-          style: disp(38).copyWith(letterSpacing: 14),
-          decoration: InputDecoration(
-            counterText: '',
-            hintText: '••••••',
-            hintStyle: disp(38, c: const Color(0xFF2C3A82)).copyWith(letterSpacing: 14),
-            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: line, width: 1.5)),
-            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: sky, width: 1.5)),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: secs > 0
-              ? Text('Reenviar código em 0:${secs.toString().padLeft(2, '0')}', style: body(14, c: mu))
-              : GestureDetector(onTap: _resendCode, child: Text('Reenviar código', style: body(14, c: sky, w: FontWeight.w600))),
-        ),
-        const Spacer(),
-        _errorLine(),
-        Cta(_busy ? 'Verificando...' : 'Verificar código',
-            code.text.length == 6 && !_busy ? _goReset : null),
-      ]);
-
-  Widget three() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        titleBlock('Nova senha', 'Escolha uma senha com pelo menos 8 caracteres.'),
-        AuthField('Nova senha', a, 'Mínimo de 8 caracteres', secret: true, onChanged: rebuild),
-        AuthField('Confirmar nova senha', b, 'Digite novamente', secret: true, error: b.text.isNotEmpty && a.text != b.text ? 'As senhas não são iguais' : null, onChanged: rebuild),
-        const Spacer(),
-        _errorLine(),
-        Cta(_busy ? 'Salvando...' : 'Redefinir senha',
-            a.text.length >= 8 && a.text == b.text && !_busy ? _savePassword : null),
-      ]);
-
-  Widget four() => Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Container(width: 84, height: 84, decoration: const BoxDecoration(color: Color(0xFF2336D9), shape: BoxShape.circle), child: const Icon(Icons.check_rounded, size: 44)),
-        const SizedBox(height: 20),
-        Text('Senha redefinida', style: disp(26)),
-        const SizedBox(height: 8),
-        Text('Agora é só entrar com a nova senha.', style: body(14, c: mu)),
-        const SizedBox(height: 28),
-        Cta('Entrar', () => Navigator.popUntil(context, (r) => r.isFirst)),
-      ]);
+  @override
+  Widget build(BuildContext context) {
+    if (_done) {
+      return Scaffold(
+        body: Shell(Padding(
+          padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(width: 84, height: 84, decoration: const BoxDecoration(color: Color(0xFF2336D9), shape: BoxShape.circle), child: const Icon(Icons.check_rounded, size: 44)),
+            const SizedBox(height: 20),
+            Text('Senha redefinida', style: disp(26)),
+            const SizedBox(height: 8),
+            Text('Agora é só entrar com a nova senha.', style: body(14, c: mu)),
+            const SizedBox(height: 28),
+            Cta('Entrar', () => Navigator.popUntil(context, (r) => r.isFirst)),
+          ]),
+        )),
+      );
+    }
+    return Scaffold(
+      body: Shell(ListView(
+        padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
+        children: [
+          Row(children: [
+            GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back_rounded, color: sky)),
+            const Spacer(),
+            Container(margin: const EdgeInsets.only(left: 6), width: 66, height: 4, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4))),
+          ]),
+          const SizedBox(height: 26),
+          titleBlock('Esqueceu sua senha?',
+              'Digite o e-mail da conta. O código de 6 dígitos aparece logo abaixo.'),
+          AuthField('E-mail', mail, 'exemplo@email.com',
+              type: TextInputType.emailAddress, onChanged: rebuild),
+          const SizedBox(height: 4),
+          Cta(_busy && !_sent ? 'Enviando...' : _sent ? 'Código enviado ✓' : 'Enviar código',
+              okMail(mail.text) && !_busy && !_sent ? _sendCode : null),
+          if (_sent) ...[
+            const SizedBox(height: 24),
+            Text('Digite o código', style: disp(20)),
+            const SizedBox(height: 4),
+            Text('Enviamos para ${mail.text.trim()}. Vale por 15 minutos.',
+                style: body(14, c: mu)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: code,
+              onChanged: rebuild,
+              maxLength: 6,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              cursorColor: sky,
+              style: disp(38).copyWith(letterSpacing: 14),
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: '••••••',
+                hintStyle: disp(38, c: const Color(0xFF2C3A82)).copyWith(letterSpacing: 14),
+                enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: line, width: 1.5)),
+                focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: sky, width: 1.5)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: _secs > 0
+                  ? Text('Reenviar código em 0:${_secs.toString().padLeft(2, '0')}',
+                      style: body(14, c: mu))
+                  : GestureDetector(
+                      onTap: _resendCode,
+                      child: Text('Reenviar código',
+                          style: body(14, c: sky, w: FontWeight.w600))),
+            ),
+            const SizedBox(height: 16),
+            _errorLine(),
+            Cta(_busy ? 'Verificando...' : 'Continuar',
+                code.text.length == 6 && !_busy ? _goReset : null),
+          ],
+          if (_verified) ...[
+            const SizedBox(height: 24),
+            Text('Nova senha', style: disp(20)),
+            const SizedBox(height: 12),
+            AuthField('Nova senha', a, 'Mínimo de 8 caracteres',
+                secret: true, onChanged: rebuild),
+            AuthField('Confirmar nova senha', b, 'Digite novamente',
+                secret: true,
+                error: b.text.isNotEmpty && a.text != b.text
+                    ? 'As senhas não são iguais'
+                    : null,
+                onChanged: rebuild),
+            const SizedBox(height: 8),
+            _errorLine(),
+            Cta(_busy ? 'Salvando...' : 'Redefinir senha',
+                a.text.length >= 8 && a.text == b.text && !_busy ? _savePassword : null),
+          ],
+          const SizedBox(height: 24),
+        ],
+      )),
+    );
+  }
 }
