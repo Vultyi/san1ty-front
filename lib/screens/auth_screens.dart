@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:estrutura_front_san1ty/screens/extra_screens.dart' show appName, outC, navy;
 import 'package:estrutura_front_san1ty/screens/home_shell.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
+import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
 // ---------------- COMPONENTES ----------------
 class AuthField extends StatefulWidget {
@@ -97,8 +98,11 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final id = TextEditingController(), pw = TextEditingController();
+  final _auth = AuthService();
+  bool _busy = false;
+  String? _error;
   String _version = 'v1.0.0';
-  bool get valid => id.text.trim().length >= 3 && pw.text.length >= 6;
+  bool get valid => id.text.trim().length >= 3 && pw.text.length >= 6 && !_busy;
 
   @override
   void initState() {
@@ -116,7 +120,22 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void enter() => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AppShell())); // TODO: autenticar na API
+  Future<void> enter() async {
+    if (!valid) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final res = await _auth.login(id.text.trim(), pw.text);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (res['success'] == true) {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const AppShell()));
+    } else {
+      setState(() => _error = res['error']?.toString() ?? 'Não foi possível entrar.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -156,7 +175,11 @@ class _LoginPageState extends State<LoginPage> {
                               style: body(14, c: sky, w: FontWeight.w600))),
                     ),
                     const SizedBox(height: 28),
-                    Cta('Entrar', valid ? enter : null),
+                    if (_error != null) ...[
+                      Text(_error!, style: body(14, c: outC)),
+                      const SizedBox(height: 12),
+                    ],
+                    Cta(_busy ? 'Entrando...' : 'Entrar', valid ? enter : null),
                     const SizedBox(height: 22),
                     Row(children: [
                       const Expanded(child: Divider(color: line)),
@@ -192,10 +215,50 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final n = TextEditingController(), e = TextEditingController(), p = TextEditingController(), s = TextEditingController(), s2 = TextEditingController();
+  final _auth = AuthService();
   bool terms = false;
+  bool _busy = false;
+  String? _error;
 
   bool get same => s.text == s2.text;
-  bool get valid => n.text.trim().length >= 3 && okMail(e.text) && p.text.replaceAll(RegExp(r'\D'), '').length >= 10 && s.text.length >= 8 && same && terms;
+  bool get valid =>
+      n.text.trim().length >= 3 &&
+      okMail(e.text) &&
+      p.text.replaceAll(RegExp(r'\D'), '').length >= 10 &&
+      s.text.length >= 8 &&
+      same &&
+      terms &&
+      !_busy;
+
+  Future<void> _submit() async {
+    if (!valid) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final res = await _auth.register(
+      email: e.text.trim(),
+      password: s.text,
+      name: n.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (res['success'] != true) {
+      setState(() => _error = res['error']?.toString() ?? 'Não foi possível criar a conta.');
+      return;
+    }
+    final code = await _auth.sendEmailCode(e.text.trim());
+    if (!mounted) return;
+    if (code['success'] != true) {
+      setState(() => _error = 'Conta criada, mas o código não chegou. Tente reenviar.');
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VerifyCodePage(email: e.text.trim(), password: s.text),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -252,9 +315,137 @@ class _RegisterPageState extends State<RegisterPage> {
                   ]),
                 ),
                 const SizedBox(height: 26),
-                Cta('Criar conta', valid ? () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AppShell()), (_) => false) : null), // TODO: cadastrar na API
+                if (_error != null) ...[
+                  Text(_error!, style: body(14, c: outC)),
+                  const SizedBox(height: 12),
+                ],
+                Cta(_busy ? 'Criando...' : 'Criar conta', valid ? _submit : null),
               ]),
             ),
+          ]),
+        )),
+      );
+}
+
+// ---------------- CONFIRMAR CÓDIGO (pós-cadastro) ----------------
+class VerifyCodePage extends StatefulWidget {
+  final String email;
+  final String password;
+  const VerifyCodePage({super.key, required this.email, required this.password});
+  @override
+  State<VerifyCodePage> createState() => _VerifyCodePageState();
+}
+
+class _VerifyCodePageState extends State<VerifyCodePage> {
+  final code = TextEditingController();
+  final _auth = AuthService();
+  bool _busy = false;
+  String? _error;
+  int _secs = 0;
+  Timer? _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _restartTimer();
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    code.dispose();
+    super.dispose();
+  }
+
+  void _restartTimer() {
+    _t?.cancel();
+    setState(() => _secs = 30);
+    _t = Timer.periodic(const Duration(seconds: 1), (k) {
+      if (_secs <= 1) k.cancel();
+      if (mounted) setState(() => _secs--);
+    });
+  }
+
+  Future<void> _resend() async {
+    _restartTimer();
+    await _auth.sendEmailCode(widget.email);
+  }
+
+  Future<void> _confirm() async {
+    if (code.text.length != 6 || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final ver = await _auth.verifyEmailCode(widget.email, code.text);
+    if (!mounted) return;
+    if (ver['success'] != true) {
+      setState(() {
+        _busy = false;
+        _error = ver['error']?.toString() ?? 'Código inválido ou expirado.';
+      });
+      return;
+    }
+    final login = await _auth.login(widget.email, widget.password);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (login['success'] == true) {
+      Navigator.pushAndRemoveUntil(
+          context, MaterialPageRoute(builder: (_) => const AppShell()), (_) => false);
+    } else {
+      setState(() => _error = 'Email confirmado! Entre com sua senha.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Shell(Padding(
+          padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Icon(Icons.arrow_back_rounded, color: sky)),
+            const SizedBox(height: 26),
+            Text('Confira seu e-mail', style: disp(30)),
+            const SizedBox(height: 8),
+            Text('Enviamos um código de 6 dígitos para ${widget.email}.',
+                style: body(15, c: mu)),
+            const SizedBox(height: 24),
+            TextField(
+              controller: code,
+              onChanged: (_) => setState(() {}),
+              maxLength: 6,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              cursorColor: sky,
+              style: disp(38).copyWith(letterSpacing: 14),
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: '••••••',
+                hintStyle: disp(38, c: const Color(0xFF2C3A82)).copyWith(letterSpacing: 14),
+                enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: line, width: 1.5)),
+                focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: sky, width: 1.5)),
+              ),
+            ),
+            const SizedBox(height: 18),
+            if (_error != null) ...[
+              Text(_error!, style: body(14, c: outC)),
+              const SizedBox(height: 12),
+            ],
+            Center(
+              child: _secs > 0
+                  ? Text('Reenviar código em 0:${_secs.toString().padLeft(2, '0')}',
+                      style: body(14, c: mu))
+                  : GestureDetector(
+                      onTap: _resend,
+                      child: Text('Reenviar código',
+                          style: body(14, c: sky, w: FontWeight.w600))),
+            ),
+            const Spacer(),
+            Cta(_busy ? 'Verificando...' : 'Confirmar', code.text.length == 6 && !_busy ? _confirm : null),
           ]),
         )),
       );
@@ -269,7 +460,10 @@ class ForgotPage extends StatefulWidget {
 
 class _ForgotPageState extends State<ForgotPage> {
   final mail = TextEditingController(), code = TextEditingController(), a = TextEditingController(), b = TextEditingController();
+  final _auth = AuthService();
   int step = 1, secs = 0;
+  bool _busy = false;
+  String? _error;
   Timer? t;
 
   @override
@@ -288,6 +482,60 @@ class _ForgotPageState extends State<ForgotPage> {
       if (secs <= 1) k.cancel();
       setState(() => secs--);
     });
+  }
+
+  Future<void> _sendCode() async {
+    if (!okMail(mail.text) || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    await _auth.sendEmailCode(mail.text.trim());
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      step = 2;
+    });
+    startTimer();
+  }
+
+  Future<void> _resendCode() async {
+    if (_busy) return;
+    await _auth.sendEmailCode(mail.text.trim());
+    if (!mounted) return;
+    startTimer();
+  }
+
+  Future<void> _goReset() async {
+    if (code.text.length != 6 || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final res = await _auth.verifyEmailCode(mail.text.trim(), code.text);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (res['success'] == true) {
+      setState(() => step = 3);
+    } else {
+      setState(() => _error = res['error']?.toString() ?? 'Código inválido ou expirado.');
+    }
+  }
+
+  Future<void> _savePassword() async {
+    if (a.text.length < 8 || a.text != b.text || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final res = await _auth.resetPasswordWithCode(mail.text.trim(), code.text, a.text);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (res['success'] == true) {
+      setState(() => step = 4);
+    } else {
+      setState(() => _error = res['error']?.toString() ?? 'Não foi possível redefinir.');
+    }
   }
 
   void rebuild(String _) => setState(() {});
@@ -318,15 +566,20 @@ class _ForgotPageState extends State<ForgotPage> {
         )),
       );
 
+  Widget _errorLine() => _error == null
+      ? const SizedBox.shrink()
+      : Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(_error!, style: body(14, c: outC)),
+        );
+
   Widget one() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         titleBlock('Esqueceu sua senha?', 'Digite o e-mail da sua conta. Se ele estiver cadastrado, enviamos um código de 6 dígitos.'),
         AuthField('E-mail', mail, 'exemplo@email.com', type: TextInputType.emailAddress, onChanged: rebuild),
         const Spacer(),
-        Cta('Enviar código', okMail(mail.text) ? () {
-              // TODO: chamar a API que envia o código por e-mail
-              setState(() => step = 2);
-              startTimer();
-            } : null),
+        _errorLine(),
+        Cta(_busy ? 'Enviando...' : 'Enviar código',
+            okMail(mail.text) && !_busy ? _sendCode : null),
       ]);
 
   Widget two() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -352,10 +605,12 @@ class _ForgotPageState extends State<ForgotPage> {
         Center(
           child: secs > 0
               ? Text('Reenviar código em 0:${secs.toString().padLeft(2, '0')}', style: body(14, c: mu))
-              : GestureDetector(onTap: startTimer, child: Text('Reenviar código', style: body(14, c: sky, w: FontWeight.w600))), // TODO: reenviar na API
+              : GestureDetector(onTap: _resendCode, child: Text('Reenviar código', style: body(14, c: sky, w: FontWeight.w600))),
         ),
         const Spacer(),
-        Cta('Verificar código', code.text.length == 6 ? () => setState(() => step = 3) : null), // TODO: validar o código na API
+        _errorLine(),
+        Cta(_busy ? 'Verificando...' : 'Verificar código',
+            code.text.length == 6 && !_busy ? _goReset : null),
       ]);
 
   Widget three() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -363,7 +618,9 @@ class _ForgotPageState extends State<ForgotPage> {
         AuthField('Nova senha', a, 'Mínimo de 8 caracteres', secret: true, onChanged: rebuild),
         AuthField('Confirmar nova senha', b, 'Digite novamente', secret: true, error: b.text.isNotEmpty && a.text != b.text ? 'As senhas não são iguais' : null, onChanged: rebuild),
         const Spacer(),
-        Cta('Redefinir senha', a.text.length >= 8 && a.text == b.text ? () => setState(() => step = 4) : null), // TODO: salvar a nova senha na API
+        _errorLine(),
+        Cta(_busy ? 'Salvando...' : 'Redefinir senha',
+            a.text.length >= 8 && a.text == b.text && !_busy ? _savePassword : null),
       ]);
 
   Widget four() => Column(mainAxisAlignment: MainAxisAlignment.center, children: [

@@ -187,3 +187,65 @@ class AuthService {
     }
   }
 }
+/// Código de verificação por email (signup / recuperação).
+extension EmailCodeExtension on AuthService {
+  Future<Map<String, dynamic>> sendEmailCode(String email,
+      {String purpose = 'signup'}) async {
+    try {
+      final response = await _apiService.post('/api/auth/email/send-code', body: {
+        'email': email,
+        'purpose': purpose,
+      });
+      if (response['success'] == false) {
+        return {'success': false, 'error': response['error']?.toString() ?? 'Tente novamente.'};
+      }
+      return {'success': true, 'data': response};
+    } catch (_) {
+      return {'success': false, 'error': 'Erro de conexão. Tente novamente.'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyEmailCode(
+      String email, String code,
+      {String purpose = 'signup'}) async {
+    try {
+      final response = await _apiService.post('/api/auth/email/verify-code', body: {
+        'email': email,
+        'purpose': purpose,
+        'code': code,
+      });
+      if (response['success'] == false) {
+        return {'success': false, 'error': _friendly(response['error'] ?? '')};
+      }
+      return {'success': true};
+    } on Exception catch (e) {
+      return {'success': false, 'error': _friendly(e)};
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPasswordWithCode(
+      String email, String code, String newPassword) async {
+    try {
+      final response = await _apiService.post('/api/auth/email/reset-password', body: {
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      });
+      if (response['success'] == false) {
+        return {'success': false, 'error': _friendly(response['error'] ?? '')};
+      }
+      return {'success': true};
+    } on Exception catch (e) {
+      return {'success': false, 'error': _friendly(e)};
+    }
+  }
+
+  String _friendly(Object e) {
+    final s = e.toString();
+    if (s.contains('400') || s.contains('Código inválido')) {
+      return 'Código inválido ou expirado.';
+    }
+    if (s.contains('429')) return 'Muitas tentativas. Aguarde um pouco.';
+    return 'Erro de conexão. Tente novamente.';
+  }
+}

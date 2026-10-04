@@ -12,6 +12,7 @@ import 'package:estrutura_front_san1ty/screens/notifications_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
+import 'package:estrutura_front_san1ty/services/payment_service.dart';
 
 class AppShell extends StatefulWidget {
   static const String routeName = '/shell';
@@ -115,7 +116,7 @@ class _HomePageState extends State<HomePage> {
   bool hide = false;
   double? goal; // meta definida pelo usuário
   String _name = 'por aqui';
-  final double earned = 3610; // TODO: soma das vendas do mês vinda da API
+  double _earned = 0; // soma real dos recebidos (API)
 
   @override
   void initState() {
@@ -126,9 +127,25 @@ class _HomePageState extends State<HomePage> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final user = await AuthService().getCurrentUser();
+    double earned = 0;
+    try {
+      final Map<String, dynamic> res = await PaymentService().getTransactionHistory(limit: 100);
+      final dynamic items = res['transactions'];
+      if (items is List) {
+        for (final dynamic t in items) {
+          if (t is! Map) continue;
+          final st = (t['status'] ?? '').toString().toLowerCase();
+          if (st == 'paid' || st == 'approved' || st == 'completed') {
+            final a = t['amount'];
+            earned += a is num ? a.toDouble() : double.tryParse(a?.toString() ?? '') ?? 0;
+          }
+        }
+      }
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
       goal = prefs.getDouble('meta_mes');
+      _earned = earned;
       final full = ((user?['full_name'] ?? '') as String).trim();
       final first = full.split(RegExp(r'\s+')).firstWhere((p) => p.isNotEmpty, orElse: () => '');
       if (first.isNotEmpty) _name = first;
@@ -199,12 +216,12 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 14),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(value: (earned / g).clamp(0.0, 1.0), minHeight: 4, backgroundColor: line, color: sky),
+              child: LinearProgressIndicator(value: (_earned / g).clamp(0.0, 1.0), minHeight: 4, backgroundColor: line, color: sky),
             ),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('${brl(earned)} de ${brl(g)}', style: body(13, c: mu)),
-              Text(earned >= g ? 'Meta batida' : '${(earned / g * 100).floor()}%, faltam ${brl(g - earned)}', style: body(13, c: sky)),
+              Text('${brl(_earned)} de ${brl(g)}', style: body(13, c: mu)),
+              Text(_earned >= g ? 'Meta batida' : '${(_earned / g * 100).floor()}%, faltam ${brl(g - _earned)}', style: body(13, c: sky)),
             ]),
           ],
         ]),
