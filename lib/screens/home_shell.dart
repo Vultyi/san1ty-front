@@ -2,7 +2,6 @@
 // Tokens compartilhados vêm de sales_screen.dart (ink, sky, ice, mu, line,
 // disp(), body(), brl(), parse(), Shell, Cta).
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +13,7 @@ import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 import 'package:estrutura_front_san1ty/services/payment_service.dart';
+import 'package:estrutura_front_san1ty/services/support_service.dart';
 
 class AppShell extends StatefulWidget {
   static const String routeName = '/shell';
