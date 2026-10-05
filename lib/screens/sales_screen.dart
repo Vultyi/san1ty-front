@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:estrutura_front_san1ty/core/utils/format.dart' as fmt;
 
 const ink = Color(0xFF03050F), sky = Color(0xFF6C92FF), ice = Color(0xFFD6E2FF), mu = Color(0xFF8E9FD8);
 const line = Color(0x24D6E2FF);
@@ -11,22 +12,11 @@ TextStyle disp(double s, {Color c = Colors.white}) => GoogleFonts.bricolageGrote
 TextStyle body(double s, {Color c = Colors.white, FontWeight w = FontWeight.w400}) =>
     GoogleFonts.instrumentSans(fontSize: s, color: c, fontWeight: w);
 
-String brl(double v) {
-  final f = v.toStringAsFixed(2).split('.');
-  final i = f[0].replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.');
-  return 'R\$ $i,${f[1]}';
-}
 
-double parse(String s) => double.tryParse(s.replaceAll('.', '').replaceAll(',', '.')) ?? 0;
-
-String slugify(String s) {
-  const a = 'áàâãäéèêëíìîïóòôõöúùûüç', b = 'aaaaaeeeeiiiiooooouuuuc';
-  var t = s.toLowerCase();
-  for (var i = 0; i < a.length; i++) {
-    t = t.replaceAll(a[i], b[i]);
-  }
-  return t.replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-|-$'), '');
-}
+/// Compat: telas usam brl()/parse()/slugify() direto.
+String brl(double v) => fmt.formatBrl(v);
+double parse(String s) => fmt.parseBrl(s);
+String slugify(String s) => fmt.slugify(s);
 
 /// Troque `d` (vendas dos últimos 7 dias) pelos dados reais da sua API.
 class Product {
@@ -252,12 +242,12 @@ class _CreatePageState extends State<CreatePage> {
   bool guarantee = true, upsell = false, done = false, copied = false;
   Color color = covers[0];
 
-  bool get valid => step != 1 || (name.text.trim().isNotEmpty && parse(price.text) > 0);
-  String get link => 'pay.sanitypay.com/${slugify(name.text)}';
+  bool get valid => step != 1 || (name.text.trim().isNotEmpty && fmt.parseBrl(price.text) > 0);
+  String get link => 'pay.sanitypay.com/${fmt.slugify(name.text)}';
 
   void next() {
     if (step < 3) return setState(() => step++);
-    widget.onPublish(Product(name.text.trim(), parse(price.text), color, [0, 0, 0, 0, 0, 0, 0]));
+    widget.onPublish(Product(name.text.trim(), fmt.parseBrl(price.text), color, [0, 0, 0, 0, 0, 0, 0]));
     setState(() => done = true);
   }
 
@@ -300,7 +290,7 @@ class _CreatePageState extends State<CreatePage> {
           padding: const EdgeInsets.all(22),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SizedBox(height: 20),
-            CoverPreview(title, desc.text.isEmpty ? brl(parse(price.text)) : desc.text, color),
+            CoverPreview(title, desc.text.isEmpty ? brl(fmt.parseBrl(price.text)) : desc.text, color),
             const SizedBox(height: 22),
             Text('Seu produto está no ar', style: disp(20)),
             const SizedBox(height: 6),
@@ -337,7 +327,7 @@ class _CreatePageState extends State<CreatePage> {
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.all(22), children: [
-            CoverPreview(title, brl(parse(price.text)), color),
+            CoverPreview(title, brl(fmt.parseBrl(price.text)), color),
             const SizedBox(height: 22),
             if (step == 1) ...[
               field('Como se chama o produto?', name, 'Ex.: Curso de edição'),
