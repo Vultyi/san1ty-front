@@ -1,6 +1,7 @@
 // AppShell + Home + Drawer + Suporte (design San1ty).
 // Tokens compartilhados vêm de sales_screen.dart (ink, sky, ice, mu, line,
 // disp(), body(), brl(), parse(), Shell, Cta).
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -442,72 +443,250 @@ class SupportPage extends StatefulWidget {
 
 class _SupportPageState extends State<SupportPage> {
   static const topics = ['Pix', 'Saque', 'Vendas', 'Minha conta', 'Outro'];
+  final _svc = SupportService();
   final msg = TextEditingController();
+  final _scroll = ScrollController();
   int topic = 0;
-  String? proto;
+  Map<String, dynamic>? _ticket;
+  List<Map<String, dynamic>> _messages = [];
+  bool _loading = true;
+  bool _sending = false;
+  String? _error;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
 
   @override
   void dispose() {
+    _timer?.cancel();
     msg.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
-  void send() => setState(() => proto = '#SP-${10000 + Random().nextInt(89999)}'); // TODO: enviar para sua API
+  Future<void> _bootstrap() async {
+    final tickets = await _svc.myTickets();
+    if (!mounted) return;
+    Map<String, dynamic>? open;
+    for (final t in tickets) {
+      if ((t['status'] ?? '') == 'open') {
+        open = t;
+        break;
+      }
+    }
+    setState(() {
+      _ticket = open;
+      _loading = false;
+    });
+    if (open != null) {
+      await _reload();
+      _startPolling();
+    }
+  }
+
+  void _startPolling() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) => _reload());
+  }
+
+  Future<void> _reload() async {
+    final t = _ticket;
+    if (t == null) return;
+    final id = t['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final msgs = await _svc.messages(id);
+    if (!mounted) return;
+    setState(() => _messages = msgs);
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (_scroll.hasClients) {
+      _scroll.animateTo(
+        _scroll.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  Future<void> _open() async {
+    final text = msg.text.trim();
+    if (text.length < 10 || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    final t = await _svc.openTicket(topics[topic], text);
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (t == null) {
+      setState(() => _error = 'Não foi possível abrir. Tente de novo.');
+      return;
+    }
+    msg.clear();
+    setState(() => _ticket = t);
+    await _reload();
+    _startPolling();
+  }
+
+  Future<void> _send() async {
+    final t = _ticket;
+    final text = msg.text.trim();
+    if (t == null || text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    final ok = await _svc.sendMessage(t['id'].toString(), text);
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (ok) {
+      msg.clear();
+      await _reload();
+    } else {
+      setState(() => _error = 'Mensagem não enviada. Tente de novo.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
         body: Shell(Padding(
-          padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
-          child: proto != null
-              ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Container(width: 84, height: 84, decoration: const BoxDecoration(color: Color(0xFF2336D9), shape: BoxShape.circle), child: const Icon(Icons.check_rounded, size: 44)),
-                  const SizedBox(height: 20),
-                  Text('Recebemos seu pedido', style: disp(26)),
-                  const SizedBox(height: 8),
-                  Text('Protocolo $proto. Respondemos em até 24 horas.', style: body(14, c: mu), textAlign: TextAlign.center),
-                  const SizedBox(height: 26),
-                  Cta('Voltar ao início', () => Navigator.pop(context)),
-                ])
-              : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    GestureDetector(onTap: () => Navigator.pop(context), child: Text('Voltar', style: body(14, c: mu))),
-                    Text('Suporte', style: disp(18)),
-                    const SizedBox(width: 40),
-                  ]),
-                  const SizedBox(height: 24),
-                  Text('Como podemos ajudar?', style: disp(26)),
-                  const SizedBox(height: 6),
-                  Text('Escolha o assunto e conte o que aconteceu.', style: body(14, c: mu)),
-                  const SizedBox(height: 18),
-                  Wrap(spacing: 8, runSpacing: 8, children: [
-                    for (var i = 0; i < topics.length; i++)
-                      GestureDetector(
-                        onTap: () => setState(() => topic = i),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                          decoration: BoxDecoration(color: i == topic ? const Color(0xFFF3F6FF) : null, borderRadius: BorderRadius.circular(99), border: Border.all(color: i == topic ? const Color(0xFFF3F6FF) : line)),
-                          child: Text(topics[i], style: body(13.5, c: i == topic ? const Color(0xFF0A1070) : ice, w: i == topic ? FontWeight.w600 : FontWeight.w400)),
-                        ),
-                      ),
-                  ]),
-                  const SizedBox(height: 22),
-                  Text('Descreva o problema', style: body(13, c: mu)),
-                  TextField(
-                    controller: msg,
-                    maxLines: 5,
-                    onChanged: (_) => setState(() {}),
-                    cursorColor: sky,
-                    style: body(17),
-                    decoration: InputDecoration(
-                      hintText: 'Ex.: fiz um Pix e o valor não apareceu no saldo',
-                      hintStyle: body(16, c: const Color(0xFF3C4C8F)),
-                      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: line, width: 1.5)),
-                      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: sky, width: 1.5)),
-                    ),
-                  ),
-                  const Spacer(),
-                  Cta('Enviar para o suporte', msg.text.trim().length >= 10 ? send : null),
-                ]),
+          padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              GestureDetector(onTap: () => Navigator.pop(context), child: Text('Voltar', style: body(14, c: mu))),
+              Text('Suporte', style: disp(18)),
+              const SizedBox(width: 40),
+            ]),
+            const SizedBox(height: 16),
+            Expanded(child: _ticket == null ? _buildNew() : _buildChat()),
+          ]),
         )),
       );
+
+  Widget _buildNew() => ListView(children: [
+        Text('Como podemos ajudar?', style: disp(26)),
+        const SizedBox(height: 6),
+        Text('Escolha o assunto e conte o que aconteceu.', style: body(14, c: mu)),
+        const SizedBox(height: 18),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (var i = 0; i < topics.length; i++)
+            GestureDetector(
+              onTap: () => setState(() => topic = i),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                decoration: BoxDecoration(
+                    color: i == topic ? const Color(0xFFF3F6FF) : null,
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(color: i == topic ? const Color(0xFFF3F6FF) : line)),
+                child: Text(topics[i],
+                    style: body(13.5, c: i == topic ? const Color(0xFF0A1070) : ice, w: i == topic ? FontWeight.w600 : FontWeight.w400)),
+              ),
+            ),
+        ]),
+        const SizedBox(height: 22),
+        Text('Descreva o problema', style: body(13, c: mu)),
+        TextField(
+          controller: msg,
+          maxLines: 5,
+          onChanged: (_) => setState(() {}),
+          cursorColor: sky,
+          style: body(17),
+          decoration: InputDecoration(
+            hintText: 'Ex.: fiz um Pix e o valor não apareceu no saldo',
+            hintStyle: body(16, c: const Color(0xFF3C4C8F)),
+            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: line, width: 1.5)),
+            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: sky, width: 1.5)),
+          ),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Text(_error!, style: body(14, c: const Color(0xFFFF9393))),
+        ],
+        const SizedBox(height: 22),
+        Cta(_sending ? 'Enviando...' : 'Abrir atendimento',
+            msg.text.trim().length >= 10 && !_sending ? _open : null),
+      ]);
+
+  Widget _buildChat() {
+    final t = _ticket!;
+    return Column(children: [
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(color: const Color(0x12D6E2FF), borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          Expanded(
+              child: Text('${t['topic'] ?? 'Atendimento'} • ${(t['id'] ?? '').toString().substring(0, 8)}',
+                  style: body(13, c: mu))),
+          GestureDetector(
+              onTap: _reload,
+              child: Text('atualizar', style: body(12, c: sky, w: FontWeight.w600))),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      Expanded(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _messages.isEmpty
+                ? Center(child: Text('Aguardando atendente...', style: body(14, c: mu)))
+                : ListView.builder(
+                    controller: _scroll,
+                    itemCount: _messages.length,
+                    itemBuilder: (_, i) => _bubble(_messages[i]),
+                  ),
+      ),
+      if (_error != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(_error!, style: body(13, c: const Color(0xFFFF9393))),
+        ),
+      Row(children: [
+        Expanded(
+          child: TextField(
+            controller: msg,
+            cursorColor: sky,
+            style: body(15),
+            decoration: InputDecoration(
+              hintText: 'Escreva sua mensagem',
+              hintStyle: body(14, c: mu),
+              filled: true,
+              fillColor: const Color(0x12D6E2FF),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: _send,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(color: sky, shape: BoxShape.circle),
+            child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+          ),
+        ),
+      ]),
+      const SizedBox(height: 12),
+    ]);
+  }
+
+  Widget _bubble(Map<String, dynamic> m) {
+    final mine = (m['sender'] ?? 'user') == 'user';
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+        decoration: BoxDecoration(
+          color: mine ? sky : const Color(0x12D6E2FF),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          (m['body'] ?? '').toString(),
+          style: body(14, c: mine ? const Color(0xFF0A1070) : Colors.white),
+        ),
+      ),
+    );
+  }
 }
