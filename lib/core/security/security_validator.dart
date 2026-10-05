@@ -1,4 +1,3 @@
-// lib/core/security/security_validator.dart
 import 'encryption_service.dart';
 
 /// Validador de segurança para o aplicativo

@@ -1,4 +1,3 @@
-// lib/core/security/security_config.dart
 import 'package:flutter/services.dart';
 
 /// Configurações de segurança do aplicativo

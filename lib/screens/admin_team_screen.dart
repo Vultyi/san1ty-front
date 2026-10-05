@@ -1,4 +1,3 @@
-// lib/screens/admin_team_screen.dart
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../theme/admin_theme.dart';

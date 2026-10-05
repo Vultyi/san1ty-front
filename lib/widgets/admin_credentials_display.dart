@@ -1,4 +1,3 @@
-// lib/widgets/admin_credentials_display.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/admin_colors.dart';

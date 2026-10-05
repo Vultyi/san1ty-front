@@ -1,4 +1,3 @@
-// lib/services/auth_service.dart
 
 import 'dart:convert';
 import 'package:estrutura_front_san1ty/core/security/api_security_service.dart';

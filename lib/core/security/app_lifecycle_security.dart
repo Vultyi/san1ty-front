@@ -1,4 +1,3 @@
-// lib/core/security/app_lifecycle_security.dart
 import 'package:flutter/material.dart';
 import 'secure_storage_service.dart';
 

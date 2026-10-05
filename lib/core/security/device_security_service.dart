@@ -1,4 +1,3 @@
-// lib/core/security/device_security_service.dart
 import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 // REMOVIDO TEMPORÁRIO (build): flutter_jailbreak_detection 1.10.0 e

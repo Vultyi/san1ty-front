@@ -1,4 +1,3 @@
-// lib/constants/colors.dart
 
 /// Central color palette for the San1ty Pay application.
 ///

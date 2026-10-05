@@ -1,4 +1,3 @@
-// lib/services/payment_service.dart
 
 import 'package:estrutura_front_san1ty/core/security/api_security_service.dart';
 import 'package:estrutura_front_san1ty/core/security/secure_storage_service.dart';

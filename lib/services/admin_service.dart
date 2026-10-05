@@ -1,4 +1,3 @@
-// lib/services/admin_service.dart
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 
 /// Autenticação das áreas admin/suporte contra o backend (App).

@@ -1,4 +1,3 @@
-// lib/widgets/admin_alert.dart
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../theme/admin_theme.dart';
