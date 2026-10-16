@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:local_auth/local_auth.dart';
 // REMOVIDO TEMPORÁRIO (build): flutter_jailbreak_detection 1.10.0 e
 // flutter_windowmanager 0.2.0 não declaram `namespace` e quebram o AGP 8+.
 // Reativar via fork com namespace antes de vender. Até lá: sem root-block
