@@ -28,9 +28,6 @@ import 'package:estrutura_front_san1ty/screens/support_dashboard_screen.dart';
 import 'package:estrutura_front_san1ty/screens/support_chats_screen.dart';
 import 'package:estrutura_front_san1ty/screens/support_approval_screen.dart';
 import 'package:estrutura_front_san1ty/screens/support_history_screen.dart';
-import 'package:estrutura_front_san1ty/screens/admin_login_screen.dart';
-import 'package:estrutura_front_san1ty/screens/admin_dashboard_screen.dart';
-import 'package:estrutura_front_san1ty/screens/admin_team_screen.dart';
 import 'package:estrutura_front_san1ty/screens/signup_screen.dart';
 
 void main() {
@@ -97,12 +94,6 @@ class MyApp extends StatelessWidget {
     SupportChatsScreen.routeName: (_) => const SupportChatsScreen(),
     SupportApprovalScreen.routeName: (_) => const SupportApprovalScreen(),
     SupportHistoryScreen.routeName: (_) => const SupportHistoryScreen(),
-    // Admin Routes
-    '/admin/login': (_) => const AdminLoginScreen(),
-    AdminDashboardScreen.routeName: (_) => const AdminDashboardScreen(),
-    '/admin/team': (_) => const AdminTeamScreen(),
-    // '/admin/chats' and '/admin/settings' removed — not yet implemented.
-    // Dashboard shows SnackBar informing the user these are in integration.
   };
 
   @override
