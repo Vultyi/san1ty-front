@@ -97,9 +97,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final id = TextEditingController(), pw = TextEditingController();
+  final id = TextEditingController(), pw = TextEditingController(), tfa = TextEditingController();
   final _auth = AuthService();
   bool _busy = false;
+  bool _needs2fa = false;
   String? _error;
   String _version = 'v1.0.0';
   bool get valid => id.text.trim().length >= 3 && pw.text.length >= 6 && !_busy;
@@ -117,6 +118,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     id.dispose();
     pw.dispose();
+    tfa.dispose();
     super.dispose();
   }
 
@@ -132,8 +134,27 @@ class _LoginPageState extends State<LoginPage> {
     if (res['success'] == true) {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => const AppShell()));
+    } else if (res['needs2fa'] == true) {
+      setState(() => _needs2fa = true);
     } else {
       setState(() => _error = res['error']?.toString() ?? 'Não foi possível entrar.');
+    }
+  }
+
+  Future<void> enterWith2fa() async {
+    if (tfa.text.length != 6 || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final res = await _auth.login(id.text.trim(), pw.text, twoFactorToken: tfa.text);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (res['success'] == true) {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const AppShell()));
+    } else {
+      setState(() => _error = res['error']?.toString() ?? 'Código inválido.');
     }
   }
 
@@ -179,7 +200,14 @@ class _LoginPageState extends State<LoginPage> {
                       Text(_error!, style: body(14, c: outC)),
                       const SizedBox(height: 12),
                     ],
-                    Cta(_busy ? 'Entrando...' : 'Entrar', valid ? enter : null),
+                    if (_needs2fa) ...[
+                      AuthField('Código do autenticador', tfa, '••••••',
+                          type: TextInputType.number,
+                          onChanged: (_) => setState(() {})),
+                      const SizedBox(height: 12),
+                    ],
+                    Cta(_busy ? 'Entrando...' : 'Entrar',
+                        valid ? (_needs2fa ? enterWith2fa : enter) : null),
                     const SizedBox(height: 22),
                     Row(children: [
                       const Expanded(child: Divider(color: line)),

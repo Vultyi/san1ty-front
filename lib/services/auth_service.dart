@@ -17,15 +17,22 @@ class AuthService {
   /// Backend retorna flat `{access_token, refresh_token}` (sem envelope);
   /// o perfil vem de `GET /api/auth/me`. O retorno aqui mantém o formato
   /// `{success, data:{accessToken, refreshToken, user}}` que as telas usam.
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String email, String password,
+      {String? twoFactorToken}) async {
     try {
       final response = await _apiService.post('/api/auth/login', body: {
         'email': email,
         'password': password,
+        if (twoFactorToken != null && twoFactorToken.isNotEmpty)
+          'two_factor_token': twoFactorToken,
       });
 
       final accessToken = response['access_token'] as String?;
       if (accessToken == null || accessToken.isEmpty) {
+        final err = (response['error'] ?? '').toString();
+        if (err.contains('dois fatores')) {
+          return {'success': false, 'needs2fa': true};
+        }
         return {
           'success': false,
           'error': response['error'] ?? 'Erro desconhecido no login.',
@@ -246,5 +253,50 @@ extension EmailCodeExtension on AuthService {
     }
     if (s.contains('429')) return 'Muitas tentativas. Aguarde um pouco.';
     return 'Erro de conexão. Tente novamente.';
+  }
+}
+
+/// Fluxo TOTP (autenticador) contra /api/2fa.
+extension TwoFactorExtension on AuthService {
+  Future<Map<String, dynamic>> twoFaStatus() async {
+    try {
+      final res = await _apiService.get('/api/2fa/status');
+      return {'success': true, 'data': res};
+    } catch (_) {
+      return {'success': false};
+    }
+  }
+
+  Future<Map<String, dynamic>> setup2fa() async {
+    try {
+      final res = await _apiService.post('/api/2fa/setup', body: {});
+      if (res['success'] == false) {
+        return {'success': false, 'error': res['error']?.toString()};
+      }
+      return {'success': true, 'data': res};
+    } catch (_) {
+      return {'success': false, 'error': 'Erro de conexão. Tente novamente.'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verify2fa(String token) async {
+    try {
+      final res = await _apiService.post('/api/2fa/verify', body: {'token': token});
+      if (res['success'] == false) {
+        return {'success': false, 'error': res['error']?.toString() ?? 'Código inválido.'};
+      }
+      return {'success': true};
+    } catch (_) {
+      return {'success': false, 'error': 'Erro de conexão. Tente novamente.'};
+    }
+  }
+
+  Future<Map<String, dynamic>> disable2fa() async {
+    try {
+      await _apiService.post('/api/2fa/disable', body: {});
+      return {'success': true};
+    } catch (_) {
+      return {'success': false, 'error': 'Erro de conexão. Tente novamente.'};
+    }
   }
 }

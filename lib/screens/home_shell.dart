@@ -11,6 +11,7 @@ import 'package:estrutura_front_san1ty/screens/auth_screens.dart';
 import 'package:estrutura_front_san1ty/screens/notifications_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
+import 'package:estrutura_front_san1ty/screens/two_factor_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
 import 'package:estrutura_front_san1ty/services/payment_service.dart';
 import 'package:estrutura_front_san1ty/services/support_service.dart';
@@ -294,7 +295,10 @@ class _HomePageState extends State<HomePage> {
             RowItem(Icons.bar_chart_rounded, 'Seu desempenho', sub: 'Acompanhe como está o seu negócio', onTap: () => widget.onTab(2)),
             goalRow(),
             const RowItem(Icons.lightbulb_outline_rounded, 'Dica do seu banco', sub: 'Ative o Pix automático e nunca perca uma venda', onTap: null),
-            RowItem(Icons.shield_outlined, 'Segurança em primeiro lugar', sub: 'Ative a verificação em 2 etapas', trailing: Text('Ativar', style: body(13, c: sky, w: FontWeight.w600))),
+            RowItem(Icons.shield_outlined, 'Segurança em primeiro lugar',
+                sub: 'Ative a verificação em 2 etapas',
+                trailing: Text('Ativar', style: body(13, c: sky, w: FontWeight.w600)),
+                onTap: () => Navigator.pushNamed(context, TwoFactorSetupScreen.routeName)),
           ]),
         ),
       ]));

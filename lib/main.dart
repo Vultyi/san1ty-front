@@ -9,6 +9,7 @@ import 'package:estrutura_front_san1ty/screens/dashboard_screen.dart';
 import 'package:estrutura_front_san1ty/screens/home_shell.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/screens/statement_screen.dart';
+import 'package:estrutura_front_san1ty/screens/two_factor_screen.dart';
 import 'package:estrutura_front_san1ty/screens/wallet_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_home_screen.dart';
 import 'package:estrutura_front_san1ty/screens/pix_manage_keys_screen.dart';
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
     PixHomeScreen.routeName: (_) => const PixHomeScreen(),
     PixManageKeysScreen.routeName: (_) => const PixManageKeysScreen(),
     SettingsScreen.routeName: (_) => const SettingsScreen(),
+    TwoFactorSetupScreen.routeName: (_) => const TwoFactorSetupScreen(),
     NotificationsScreen.routeName: (_) => const NotificationsScreen(),
     LoginPage.routeName: (_) => const LoginPage(),
     PixPayScreen.routeName: (_) => const PixPayScreen(),
