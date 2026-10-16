@@ -285,3 +285,38 @@ extension PixKeyDeleteExtension on PaymentService {
     }
   }
 }
+
+/// Produtos do vendedor (persistidos no backend).
+extension ProductApiExtension on PaymentService {
+  Future<List<Map<String, dynamic>>> listProducts() async {
+    try {
+      final res = await _apiService.get('/api/products');
+      final items = res['products'];
+      if (items is List) {
+        return items.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> createProduct({
+    required String name,
+    required int priceCents,
+    String? description,
+    String? color,
+    bool guarantee = true,
+  }) async {
+    try {
+      final res = await _apiService.post('/api/products', body: {
+        'name': name,
+        'price_cents': priceCents,
+        if (description != null) 'description': description,
+        if (color != null) 'color': color,
+        'guarantee': guarantee,
+      });
+      final p = res['product'];
+      if (p is Map) return Map<String, dynamic>.from(p);
+    } catch (_) {}
+    return null;
+  }
+}

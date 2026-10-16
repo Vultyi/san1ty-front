@@ -1,3 +1,4 @@
+import 'package:estrutura_front_san1ty/services/payment_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -113,14 +114,62 @@ class SalesScreen extends StatefulWidget {
 }
 
 class _SalesScreenState extends State<SalesScreen> {
-  final prods = <Product>[
-    Product('Curso de edição de vídeo', 149.9, covers[0], [3, 5, 2, 6, 4, 7, 5]),
-    Product('Pack de presets', 39.9, covers[1], [8, 6, 9, 5, 7, 4, 6]),
-    Product('Mentoria 1:1', 497, covers[2], [0, 1, 0, 0, 1, 0, 0]),
-    Product('E-book de roteiros', 29.9, covers[3], [0, 0, 0, 0, 0, 0, 0]),
-  ];
+  final _service = PaymentService();
+  List<Product> prods = [];
+  bool _loadingProducts = true;
   int per = 7;
   Product? sel;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Color _colorFrom(String? hex) {
+    final h = (hex ?? '').replaceAll('#', '');
+    if (h.length == 6) {
+      final v = int.tryParse(h, radix: 16);
+      if (v != null) return Color(0xFF000000 | v);
+    }
+    return covers[0];
+  }
+
+  Future<void> _loadProducts() async {
+    final items = await _service.listProducts();
+    if (!mounted) return;
+    setState(() {
+      prods = items.map((e) {
+        final cents = e['price_cents'];
+        final price = cents is num ? cents.toDouble() / 100.0 : 0.0;
+        return Product(
+          (e['name'] ?? 'Produto').toString(),
+          price,
+          _colorFrom(e['color']?.toString()),
+          [0, 0, 0, 0, 0, 0, 0],
+        );
+      }).toList();
+      _loadingProducts = false;
+      sel = null;
+    });
+  }
+
+  Future<void> _publish(String name, double price, Color color, String desc) async {
+    final created = await _service.createProduct(
+      name: name,
+      priceCents: (price * 100).round(),
+      description: desc.isEmpty ? null : desc,
+      color: '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+    );
+    if (!mounted) return;
+    if (created != null) {
+      await _loadProducts();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível publicar. Tente de novo.')),
+      );
+    }
+  }
 
   int qty(Product p) => p.counts(per).fold(0, (a, b) => a + b);
   double rev(Product p) => qty(p) * p.price;
@@ -177,7 +226,14 @@ class _SalesScreenState extends State<SalesScreen> {
           const SizedBox(height: 26),
           Text('Seus produtos', style: disp(17)),
           const SizedBox(height: 4),
-          Text('Toque num produto para ver só as vendas dele.', style: body(13, c: mu)),
+          Text(
+            _loadingProducts
+                ? 'Carregando seus produtos...'
+                : prods.isEmpty
+                    ? 'Nenhum produto ainda. Crie o primeiro abaixo.'
+                    : 'Toque num produto para ver só as vendas dele.',
+            style: body(13, c: mu),
+          ),
           for (final p in rank) productRow(p, all),
         ]),
         Positioned(
@@ -186,7 +242,15 @@ class _SalesScreenState extends State<SalesScreen> {
             padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
             decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x0003050F), ink], stops: [0, .4])),
             child: Cta('Criar produto', () async {
-              await Navigator.push(context, MaterialPageRoute(builder: (_) => CreatePage(onPublish: (p) => setState(() { prods.add(p); sel = null; }))));
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => CreatePage(onPublish: (p, desc) async {
+                            await _publish(p.name, p.price, p.color, desc);
+                            if (!context.mounted) return false;
+                            setState(() => sel = null);
+                            return true;
+                          })));
             }),
           ),
         ),
@@ -229,7 +293,7 @@ class _SalesScreenState extends State<SalesScreen> {
 }
 
 class CreatePage extends StatefulWidget {
-  final void Function(Product) onPublish;
+  final Future<bool> Function(Product product, String description) onPublish;
   const CreatePage({super.key, required this.onPublish});
   @override
   State<CreatePage> createState() => _CreatePageState();
@@ -245,10 +309,19 @@ class _CreatePageState extends State<CreatePage> {
   bool get valid => step != 1 || (name.text.trim().isNotEmpty && fmt.parseBrl(price.text) > 0);
   String get link => 'pay.sanitypay.com/${fmt.slugify(name.text)}';
 
-  void next() {
+  bool _publishing = false;
+
+  void next() async {
     if (step < 3) return setState(() => step++);
-    widget.onPublish(Product(name.text.trim(), fmt.parseBrl(price.text), color, [0, 0, 0, 0, 0, 0, 0]));
-    setState(() => done = true);
+    if (_publishing) return;
+    setState(() => _publishing = true);
+    final ok = await widget.onPublish(
+      Product(name.text.trim(), fmt.parseBrl(price.text), color, [0, 0, 0, 0, 0, 0, 0]),
+      desc.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _publishing = false);
+    if (ok) setState(() => done = true);
   }
 
   Widget field(String label, TextEditingController c, String hint, {bool big = true, bool money = false}) => Padding(
