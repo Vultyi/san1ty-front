@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:estrutura_front_san1ty/core/i18n_service.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 import 'package:estrutura_front_san1ty/screens/auth_screens.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_list_screen.dart';
@@ -32,6 +33,8 @@ import 'package:estrutura_front_san1ty/screens/support_history_screen.dart';
 import 'package:estrutura_front_san1ty/screens/signup_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  I18nService.instance.init();
   runApp(const MyApp());
 }
 

@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:estrutura_front_san1ty/core/i18n_service.dart';
 import 'package:estrutura_front_san1ty/screens/commerce_intro_screen.dart';
 import 'package:estrutura_front_san1ty/screens/extra_screens.dart';
 import 'package:estrutura_front_san1ty/screens/auth_screens.dart';
@@ -27,10 +28,10 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int tab = 0;
   static const _ic = [Icons.home_rounded, Icons.receipt_long_outlined, Icons.storefront_outlined, Icons.account_balance_wallet_outlined];
-  static const _lb = ['Início', 'Extrato', 'Comércio', 'Carteira'];
 
   @override
   Widget build(BuildContext context) {
+    final lb = [tr('home.nav_home'), tr('home.nav_statement'), tr('home.nav_commerce'), tr('home.nav_wallet')];
     final pages = [
       HomePage(onTab: (i) => setState(() => tab = i)),
       const ExtratoPage(),
@@ -54,7 +55,7 @@ class _AppShellState extends State<AppShell> {
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Icon(_ic[i], color: i == tab ? sky : mu),
                   const SizedBox(height: 3),
-                  Text(_lb[i], style: body(12, c: i == tab ? Colors.white : mu, w: i == tab ? FontWeight.w600 : FontWeight.w400)),
+                  Text(lb[i], style: body(12, c: i == tab ? Colors.white : mu, w: i == tab ? FontWeight.w600 : FontWeight.w400)),
                 ]),
               ),
             ),
@@ -208,8 +209,8 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Meta do mês', style: body(15, w: FontWeight.w600)),
-                Text(g == null ? 'Toque para definir quanto quer vender' : 'Toque para editar sua meta', style: body(13, c: mu)),
+                Text(tr('home.goal'), style: body(15, w: FontWeight.w600)),
+                Text(g == null ? tr('home.goal_empty') : tr('home.goal_edit'), style: body(13, c: mu)),
               ]),
             ),
             const Icon(Icons.chevron_right_rounded, color: mu),
@@ -250,7 +251,7 @@ class _HomePageState extends State<HomePage> {
           child: Row(children: [
             Container(width: 58, height: 58, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: sky, width: 2)), child: const Icon(Icons.photo_camera_outlined, color: ice)),
             const SizedBox(width: 14),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Olá, $_name', style: disp(21)), Text('Que bom ter você por aqui.', style: body(14, c: mu))]),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${tr('home.greeting')}, $_name', style: disp(21)), Text(tr('home.welcome'), style: body(14, c: mu))]),
           ]),
         ),
         // "quadrado invisível": só um fundo bem sutil, sem borda
@@ -264,14 +265,14 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Text('Saldo em conta', style: body(14, c: mu)),
+                    Text(tr('home.balance'), style: body(14, c: mu)),
                     const SizedBox(width: 8),
                     GestureDetector(onTap: () => setState(() => hide = !hide), child: Icon(hide ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: mu)),
                   ]),
                   const SizedBox(height: 8),
                   Text(hide ? 'R\$ ••••••' : 'R\$ 1.356,98', style: disp(30)),
                   const SizedBox(height: 6),
-                  Text('Seu dinheiro rende mais aqui', style: body(13, c: mu)),
+                  Text(tr('home.tagline'), style: body(13, c: mu)),
                 ]),
               ),
               const Icon(Icons.chevron_right_rounded, color: mu),
@@ -280,24 +281,24 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 16),
         Row(children: [
-          tile(Icons.pix, 'Pix', 'Transferir e pagar',
+          tile(Icons.pix, tr('home.shortcuts_pix'), tr('home.shortcuts_pix_sub'),
               first: true,
               tap: () => Navigator.pushNamed(context, PixHomeScreen.routeName)),
-          tile(Icons.shopping_bag_outlined, 'Vendas', 'Seu faturamento',
+          tile(Icons.shopping_bag_outlined, tr('home.shortcuts_sales'), tr('home.shortcuts_sales_sub'),
               tap: () => Navigator.pushNamed(context, SalesScreen.routeName)),
-          tile(Icons.request_page_outlined, 'Pagar conta', 'Boletos e serviços', tap: () {}),
-          tile(Icons.close_rounded, 'Em breve', 'Novidades', off: true),
+          tile(Icons.request_page_outlined, tr('home.shortcuts_bill'), tr('home.shortcuts_bill_sub'), tap: () {}),
+          tile(Icons.close_rounded, tr('home.shortcuts_soon'), tr('home.shortcuts_soon_sub'), off: true),
         ]),
         const SizedBox(height: 14),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Column(children: [
-            RowItem(Icons.bar_chart_rounded, 'Seu desempenho', sub: 'Acompanhe como está o seu negócio', onTap: () => widget.onTab(2)),
+            RowItem(Icons.bar_chart_rounded, tr('home.performance'), sub: tr('home.performance_sub'), onTap: () => widget.onTab(2)),
             goalRow(),
-            const RowItem(Icons.lightbulb_outline_rounded, 'Dica do seu banco', sub: 'Ative o Pix automático e nunca perca uma venda', onTap: null),
-            RowItem(Icons.shield_outlined, 'Segurança em primeiro lugar',
-                sub: 'Ative a verificação em 2 etapas',
-                trailing: Text('Ativar', style: body(13, c: sky, w: FontWeight.w600)),
+            RowItem(Icons.lightbulb_outline_rounded, tr('home.tip'), sub: tr('home.tip_text'), onTap: null),
+            RowItem(Icons.shield_outlined, tr('home.security'),
+                sub: tr('home.security_sub'),
+                trailing: Text(tr('home.security_cta'), style: body(13, c: sky, w: FontWeight.w600)),
                 onTap: () => Navigator.pushNamed(context, TwoFactorSetupScreen.routeName)),
           ]),
         ),
@@ -325,9 +326,9 @@ class _GoalSheetState extends State<GoalSheet> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: line, borderRadius: BorderRadius.circular(4)))),
           const SizedBox(height: 20),
-          Text('Quanto você quer vender este mês?', style: disp(22)),
+          Text(tr('home.goal_dialog_title'), style: disp(22)),
           const SizedBox(height: 6),
-          Text('A gente acompanha suas vendas até lá.', style: body(14, c: mu)),
+          Text(tr('home.goal_dialog_sub'), style: body(14, c: mu)),
           const SizedBox(height: 14),
           TextField(
             controller: c,
@@ -345,7 +346,7 @@ class _GoalSheetState extends State<GoalSheet> {
             ),
           ),
           const SizedBox(height: 14),
-          Cta('Definir meta', parse(c.text) > 0 ? () => Navigator.pop(context, parse(c.text)) : null),
+          Cta(tr('home.goal_set'), parse(c.text) > 0 ? () => Navigator.pop(context, parse(c.text)) : null),
         ]),
       );
 }
@@ -396,20 +397,20 @@ class _MenuDrawerState extends State<MenuDrawer> {
             Row(children: [
               Container(width: 52, height: 52, alignment: Alignment.center, decoration: const BoxDecoration(color: Color(0xFF2336D9), shape: BoxShape.circle), child: Text(initial, style: disp(22))),
               const SizedBox(width: 14),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(_name.isEmpty ? 'Olá' : _name, style: disp(20)), Text('Conta San1ty', style: body(13, c: mu))]),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(_name.isEmpty ? tr('home.greeting') : _name, style: disp(20)), Text(tr('home.drawer_account'), style: body(13, c: mu))]),
             ]),
             const SizedBox(height: 20),
-            RowItem(Icons.person_outline_rounded, 'Perfil', onTap: () => _open(context, const InfoPage('Perfil', [
+            RowItem(Icons.person_outline_rounded, tr('home.drawer_profile'), onTap: () => _open(context, InfoPage(tr('home.drawer_profile'), [
                   RowItem(Icons.badge_outlined, 'Dados da conta', sub: 'Nome, CPF e endereço'),
                   RowItem(Icons.pix, 'Minhas chaves Pix'),
                 ]))),
-            RowItem(Icons.settings_outlined, 'Configurações', onTap: () => _open(context, const InfoPage('Configurações', [
+            RowItem(Icons.settings_outlined, tr('home.drawer_settings'), onTap: () => _open(context, InfoPage(tr('home.drawer_settings'), [
                   RowItem(Icons.notifications_none_rounded, 'Notificações'),
                   RowItem(Icons.lock_outline_rounded, 'Segurança e senha'),
                 ]))),
-            RowItem(Icons.headset_mic_outlined, 'Suporte', onTap: () => _open(context, const SupportPage())),
+            RowItem(Icons.headset_mic_outlined, tr('home.drawer_support'), onTap: () => _open(context, const SupportPage())),
             const Spacer(),
-            RowItem(Icons.logout_rounded, 'Sair da conta', onTap: () => _logout(context)),
+            RowItem(Icons.logout_rounded, tr('home.drawer_logout'), onTap: () => _logout(context)),
             const SizedBox(height: 12),
           ]),
         ),
@@ -428,7 +429,7 @@ class InfoPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
           child: Column(children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              GestureDetector(onTap: () => Navigator.pop(context), child: Text('Voltar', style: body(14, c: mu))),
+              GestureDetector(onTap: () => Navigator.pop(context), child: Text(tr('support.back'), style: body(14, c: mu))),
               Text(title, style: disp(18)),
               const SizedBox(width: 40),
             ]),
@@ -447,6 +448,19 @@ class SupportPage extends StatefulWidget {
 
 class _SupportPageState extends State<SupportPage> {
   static const topics = ['Pix', 'Saque', 'Vendas', 'Minha conta', 'Outro'];
+
+  String _topicLabel(int i) {
+    const labels = {
+      'Pix': ['Pix', 'Pix', 'Pix'],
+      'Saque': ['Saque', 'Withdrawal', 'Retiro'],
+      'Vendas': ['Vendas', 'Sales', 'Ventas'],
+      'Minha conta': ['Minha conta', 'My account', 'Mi cuenta'],
+      'Outro': ['Outro', 'Other', 'Otro'],
+    };
+    final lang = I18nService.instance.locale.value;
+    final idx = lang == 'en' ? 1 : lang == 'es' ? 2 : 0;
+    return (labels[topics[i]] ?? [topics[i], topics[i], topics[i]])[idx];
+  }
   final _svc = SupportService();
   final msg = TextEditingController();
   final _scroll = ScrollController();
@@ -557,8 +571,8 @@ class _SupportPageState extends State<SupportPage> {
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              GestureDetector(onTap: () => Navigator.pop(context), child: Text('Voltar', style: body(14, c: mu))),
-              Text('Suporte', style: disp(18)),
+              GestureDetector(onTap: () => Navigator.pop(context), child: Text(tr('support.back'), style: body(14, c: mu))),
+              Text(tr('support.title'), style: disp(18)),
               const SizedBox(width: 40),
             ]),
             const SizedBox(height: 16),
@@ -568,9 +582,9 @@ class _SupportPageState extends State<SupportPage> {
       );
 
   Widget _buildNew() => ListView(children: [
-        Text('Como podemos ajudar?', style: disp(26)),
+        Text(tr('support.how'), style: disp(26)),
         const SizedBox(height: 6),
-        Text('Escolha o assunto e conte o que aconteceu.', style: body(14, c: mu)),
+        Text(tr('support.sub'), style: body(14, c: mu)),
         const SizedBox(height: 18),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (var i = 0; i < topics.length; i++)
@@ -582,13 +596,13 @@ class _SupportPageState extends State<SupportPage> {
                     color: i == topic ? const Color(0xFFF3F6FF) : null,
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(color: i == topic ? const Color(0xFFF3F6FF) : line)),
-                child: Text(topics[i],
+                child: Text(_topicLabel(i),
                     style: body(13.5, c: i == topic ? const Color(0xFF0A1070) : ice, w: i == topic ? FontWeight.w600 : FontWeight.w400)),
               ),
             ),
         ]),
         const SizedBox(height: 22),
-        Text('Descreva o problema', style: body(13, c: mu)),
+        Text(tr('support.describe'), style: body(13, c: mu)),
         TextField(
           controller: msg,
           maxLines: 5,
@@ -596,7 +610,7 @@ class _SupportPageState extends State<SupportPage> {
           cursorColor: sky,
           style: body(17),
           decoration: InputDecoration(
-            hintText: 'Ex.: fiz um Pix e o valor não apareceu no saldo',
+            hintText: tr('support.hint'),
             hintStyle: body(16, c: const Color(0xFF3C4C8F)),
             enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: line, width: 1.5)),
             focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: sky, width: 1.5)),
@@ -631,7 +645,7 @@ class _SupportPageState extends State<SupportPage> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _messages.isEmpty
-                ? Center(child: Text('Aguardando atendente...', style: body(14, c: mu)))
+                ? Center(child: Text(tr('support.waiting'), style: body(14, c: mu)))
                 : ListView.builder(
                     controller: _scroll,
                     itemCount: _messages.length,

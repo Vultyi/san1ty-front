@@ -5,7 +5,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:estrutura_front_san1ty/screens/extra_screens.dart' show appName, outC, navy;
+import 'package:estrutura_front_san1ty/core/i18n_service.dart';
+import 'package:estrutura_front_san1ty/screens/extra_screens.dart'
+    show appName, outC, navy, SplashPage;
 import 'package:estrutura_front_san1ty/screens/home_shell.dart';
 import 'package:estrutura_front_san1ty/screens/sales_screen.dart';
 import 'package:estrutura_front_san1ty/services/auth_service.dart';
@@ -72,6 +74,46 @@ class Ghost extends StatelessWidget {
 }
 
 bool okMail(String s) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s.trim());
+
+/// Seletor de idioma (PT/ES/EN) com restart do fluxo para aplicar.
+Future<void> _pickLanguage(BuildContext context) async {
+  const options = [('pt-BR', 'Português'), ('es', 'Español'), ('en', 'English')];
+  final current = I18nService.instance.locale.value;
+  final chosen = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: const Color(0xFF0B1235),
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+    builder: (_) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (code, label) in options)
+            ListTile(
+              title: Text(label,
+                  style: body(16,
+                      c: code == current ? sky : Colors.white,
+                      w: code == current ? FontWeight.w600 : FontWeight.w400)),
+              trailing: code == current
+                  ? const Icon(Icons.check_rounded, color: sky)
+                  : null,
+              onTap: () => Navigator.pop(context, code),
+            ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    ),
+  );
+  if (chosen != null && chosen != current && context.mounted) {
+    await I18nService.instance.setLocale(chosen);
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SplashPage()),
+      (_) => false,
+    );
+  }
+}
 
 // Wordmark textual San1ty (sem símbolo).
 class _San1tyWordmark extends StatelessWidget {
@@ -165,10 +207,25 @@ class _LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const _San1tyWordmark(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: line)), // TODO: seletor de idioma
-                child: Row(children: [const Icon(Icons.language_rounded, size: 18, color: mu), const SizedBox(width: 6), Text('PT-BR', style: body(13, c: mu, w: FontWeight.w600))]),
+              GestureDetector(
+                onTap: () => _pickLanguage(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: line)),
+                  child: Row(children: [
+                    const Icon(Icons.language_rounded, size: 18, color: mu),
+                    const SizedBox(width: 6),
+                    ValueListenableBuilder<String>(
+                      valueListenable: I18nService.instance.locale,
+                      builder: (_, code, __) => Text(
+                        code == 'en' ? 'EN' : code == 'es' ? 'ES' : 'PT-BR',
+                        style: body(13, c: mu, w: FontWeight.w600),
+                      ),
+                    ),
+                  ]),
+                ),
               ),
             ]),
           ),
@@ -180,19 +237,19 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Acessar conta', style: disp(34)),
+                    Text(tr('app.access_account'), style: disp(34)),
                     const SizedBox(height: 8),
-                    Text('Bom te ver de novo.', style: body(15, c: mu)),
+                    Text(tr('app.welcome_back'), style: body(15, c: mu)),
                     const SizedBox(height: 34),
-                    AuthField('E-mail ou CPF', id, 'exemplo@email.com',
+                    AuthField(tr('auth.email_or_cpf'), id, 'exemplo@email.com',
                         type: TextInputType.emailAddress, onChanged: (_) => setState(() {})),
-                    AuthField('Senha', pw, '••••••••', secret: true, onChanged: (_) => setState(() {})),
+                    AuthField(tr('auth.password'), pw, '••••••••', secret: true, onChanged: (_) => setState(() {})),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: GestureDetector(
                           onTap: () => Navigator.push(
                               context, MaterialPageRoute(builder: (_) => const ForgotPage())),
-                          child: Text('Esqueci minha senha',
+                          child: Text(tr('auth.forgot_password'),
                               style: body(14, c: sky, w: FontWeight.w600))),
                     ),
                     const SizedBox(height: 28),
@@ -206,18 +263,18 @@ class _LoginPageState extends State<LoginPage> {
                           onChanged: (_) => setState(() {})),
                       const SizedBox(height: 12),
                     ],
-                    Cta(_busy ? 'Entrando...' : 'Entrar',
+                    Cta(_busy ? tr('app.entering') : tr('app.enter'),
                         valid ? (_needs2fa ? enterWith2fa : enter) : null),
                     const SizedBox(height: 22),
                     Row(children: [
                       const Expanded(child: Divider(color: line)),
                       Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
-                          child: Text('ou', style: body(14, c: mu))),
+                          child: Text(tr('app.or'), style: body(14, c: mu))),
                       const Expanded(child: Divider(color: line))
                     ]),
                     const SizedBox(height: 22),
-                    Ghost('Criar nova conta',
+                    Ghost(tr('app.create_account'),
                         () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()))),
                   ],
                 ),
@@ -310,15 +367,15 @@ class _RegisterPageState extends State<RegisterPage> {
             ]),
             Expanded(
               child: ListView(padding: const EdgeInsets.only(top: 26, bottom: 24), children: [
-                Text('Bem-vindo!', style: disp(32)),
+                Text(tr('app.welcome'), style: disp(32)),
                 const SizedBox(height: 6),
-                Text('Crie sua conta para começar.', style: body(15, c: mu)),
+                Text(tr('app.create_sub'), style: body(15, c: mu)),
                 const SizedBox(height: 28),
-                AuthField('Nome completo', n, 'Digite seu nome completo', onChanged: rebuild),
-                AuthField('E-mail', e, 'Digite seu e-mail', type: TextInputType.emailAddress, onChanged: rebuild),
-                AuthField('Telefone', p, '(11) 99999-9999', type: TextInputType.phone, onChanged: rebuild),
-                AuthField('Senha', s, 'Mínimo de 8 caracteres', secret: true, onChanged: rebuild),
-                AuthField('Confirmar senha', s2, 'Digite novamente sua senha', secret: true, error: s2.text.isNotEmpty && !same ? 'As senhas não são iguais' : null, onChanged: rebuild),
+                AuthField(tr('app.full_name'), n, tr('app.type_full_name'), onChanged: rebuild),
+                AuthField(tr('app.email'), e, tr('app.type_email'), type: TextInputType.emailAddress, onChanged: rebuild),
+                AuthField(tr('app.phone'), p, '(11) 99999-9999', type: TextInputType.phone, onChanged: rebuild),
+                AuthField(tr('app.password'), s, tr('app.min8'), secret: true, onChanged: rebuild),
+                AuthField(tr('app.confirm_password'), s2, tr('app.type_password_again'), secret: true, error: s2.text.isNotEmpty && !same ? tr('app.passwords_differ') : null, onChanged: rebuild),
                 const SizedBox(height: 4),
                 GestureDetector(
                   onTap: () => setState(() => terms = !terms),
@@ -333,10 +390,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     Expanded(
                       child: Text.rich(
                         TextSpan(style: body(14, c: mu), children: [
-                          const TextSpan(text: 'Aceito os '),
-                          TextSpan(text: 'Termos de Uso', style: body(14, c: sky).copyWith(decoration: TextDecoration.underline)), // TODO: abrir os termos
-                          const TextSpan(text: ' e a '),
-                          TextSpan(text: 'Política de Privacidade', style: body(14, c: sky).copyWith(decoration: TextDecoration.underline)),
+                          TextSpan(text: '${tr('app.accept')} '),
+                          TextSpan(text: tr('app.terms'), style: body(14, c: sky).copyWith(decoration: TextDecoration.underline)), // TODO: abrir os termos
+                          TextSpan(text: ' ${tr('app.and_the')} '),
+                          TextSpan(text: tr('app.privacy'), style: body(14, c: sky).copyWith(decoration: TextDecoration.underline)),
                         ]),
                       ),
                     ),
@@ -347,7 +404,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   Text(_error!, style: body(14, c: outC)),
                   const SizedBox(height: 12),
                 ],
-                Cta(_busy ? 'Criando...' : 'Criar conta', valid ? _submit : null),
+                Cta(_busy ? tr('app.creating') : tr('app.create_account'), valid ? _submit : null),
               ]),
             ),
           ]),
@@ -434,9 +491,9 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
                 onTap: () => Navigator.pop(context),
                 child: const Icon(Icons.arrow_back_rounded, color: sky)),
             const SizedBox(height: 26),
-            Text('Confira seu e-mail', style: disp(30)),
+            Text(tr('app.verify_email_title'), style: disp(30)),
             const SizedBox(height: 8),
-            Text('Enviamos um código de 6 dígitos para ${widget.email}.',
+            Text('${tr('app.verify_email_sub')} ${widget.email}.',
                 style: body(15, c: mu)),
             const SizedBox(height: 24),
             TextField(
@@ -465,15 +522,15 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
             ],
             Center(
               child: _secs > 0
-                  ? Text('Reenviar código em 0:${_secs.toString().padLeft(2, '0')}',
+                  ? Text(tr('app.resend_in') + ' 0:${_secs.toString().padLeft(2, '0')}',
                       style: body(14, c: mu))
                   : GestureDetector(
                       onTap: _resend,
-                      child: Text('Reenviar código',
+                      child: Text(tr('app.resend'),
                           style: body(14, c: sky, w: FontWeight.w600))),
             ),
             const Spacer(),
-            Cta(_busy ? 'Verificando...' : 'Confirmar', code.text.length == 6 && !_busy ? _confirm : null),
+            Cta(_busy ? tr('app.verifying') : tr('app.confirm'), code.text.length == 6 && !_busy ? _confirm : null),
           ]),
         )),
       );
@@ -592,9 +649,9 @@ class _ForgotPageState extends State<ForgotPage> {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(width: 84, height: 84, decoration: const BoxDecoration(color: Color(0xFF2336D9), shape: BoxShape.circle), child: const Icon(Icons.check_rounded, size: 44)),
             const SizedBox(height: 20),
-            Text('Senha redefinida', style: disp(26)),
+            Text(tr('app.reset_done'), style: disp(26)),
             const SizedBox(height: 8),
-            Text('Agora é só entrar com a nova senha.', style: body(14, c: mu)),
+            Text(tr('app.reset_done_sub'), style: body(14, c: mu)),
             const SizedBox(height: 28),
             Cta('Entrar', () => Navigator.popUntil(context, (r) => r.isFirst)),
           ]),
@@ -611,18 +668,18 @@ class _ForgotPageState extends State<ForgotPage> {
             Container(margin: const EdgeInsets.only(left: 6), width: 66, height: 4, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4))),
           ]),
           const SizedBox(height: 26),
-          titleBlock('Esqueceu sua senha?',
-              'Digite o e-mail da conta. O código de 6 dígitos aparece logo abaixo.'),
-          AuthField('E-mail', mail, 'exemplo@email.com',
+          titleBlock(tr('app.forgot_title'),
+              tr('app.forgot_sub')),
+          AuthField(tr('app.email'), mail, 'exemplo@email.com',
               type: TextInputType.emailAddress, onChanged: rebuild),
           const SizedBox(height: 4),
-          Cta(_busy && !_sent ? 'Enviando...' : _sent ? 'Código enviado ✓' : 'Enviar código',
+          Cta(_busy && !_sent ? tr('app.sending') : _sent ? tr('app.code_sent') : tr('app.send_code'),
               okMail(mail.text) && !_busy && !_sent ? _sendCode : null),
           if (_sent) ...[
             const SizedBox(height: 24),
-            Text('Digite o código', style: disp(20)),
+            Text(tr('app.type_code'), style: disp(20)),
             const SizedBox(height: 4),
-            Text('Enviamos para ${mail.text.trim()}. Vale por 15 minutos.',
+            Text('${tr('app.code_sub')} ${mail.text.trim()}. ${tr('app.code_validity')}',
                 style: body(14, c: mu)),
             const SizedBox(height: 12),
             TextField(
@@ -647,25 +704,25 @@ class _ForgotPageState extends State<ForgotPage> {
             const SizedBox(height: 12),
             Center(
               child: _secs > 0
-                  ? Text('Reenviar código em 0:${_secs.toString().padLeft(2, '0')}',
+                  ? Text(tr('app.resend_in') + ' 0:${_secs.toString().padLeft(2, '0')}',
                       style: body(14, c: mu))
                   : GestureDetector(
                       onTap: _resendCode,
-                      child: Text('Reenviar código',
+                      child: Text(tr('app.resend'),
                           style: body(14, c: sky, w: FontWeight.w600))),
             ),
             const SizedBox(height: 16),
             _errorLine(),
-            Cta(_busy ? 'Verificando...' : 'Continuar',
+            Cta(_busy ? tr('app.verifying') : tr('app.continue'),
                 code.text.length == 6 && !_busy ? _goReset : null),
           ],
           if (_verified) ...[
             const SizedBox(height: 24),
-            Text('Nova senha', style: disp(20)),
+            Text(tr('app.new_password'), style: disp(20)),
             const SizedBox(height: 12),
-            AuthField('Nova senha', a, 'Mínimo de 8 caracteres',
+            AuthField(tr('app.new_password'), a, tr('app.min8'),
                 secret: true, onChanged: rebuild),
-            AuthField('Confirmar nova senha', b, 'Digite novamente',
+            AuthField(tr('app.confirm_password'), b, tr('app.type_password_again'),
                 secret: true,
                 error: b.text.isNotEmpty && a.text != b.text
                     ? 'As senhas não são iguais'
@@ -673,7 +730,7 @@ class _ForgotPageState extends State<ForgotPage> {
                 onChanged: rebuild),
             const SizedBox(height: 8),
             _errorLine(),
-            Cta(_busy ? 'Salvando...' : 'Redefinir senha',
+            Cta(_busy ? tr('app.saving') : tr('auth.reset_password'),
                 a.text.length >= 8 && a.text == b.text && !_busy ? _savePassword : null),
           ],
           const SizedBox(height: 24),

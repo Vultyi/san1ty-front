@@ -360,16 +360,13 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 2800), () async {
-      if (!mounted) return;
-      final logged = await AuthService().isLoggedIn();
+    Future.delayed(const Duration(milliseconds: 2800), () {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) =>
-              logged ? const AppShell() : const LoginPage(),
+          pageBuilder: (_, __, ___) => const LoginPage(),
           transitionsBuilder: (_, a, __, child) => FadeTransition(opacity: a, child: child),
         ),
       );
